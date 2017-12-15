@@ -12,6 +12,12 @@ mix run --no-halt
 #### Основные команды
 - [ ] PASS
 - [ ] NICK
+	- [X] ERR_NONICKNAMEGIVEN
+	- [ ] ERR_NICKNAMEINUSE
+	- [ ] ERR_UNAVAILRESOURCE
+	- [ ] ERR_ERRONEUSNICKNAME
+	- [ ] ERR_NICKCOLLISION
+	- [ ] ERR_RESTRICTED
 - [ ] USER
 - [ ] SERVER
 - [ ] OPER

@@ -4,9 +4,11 @@ defmodule ExIRCd do
   def start(_type, _args) do
     port = Application.get_env(:exircd, :port)
 
-    children = [{Task, fn -> IRC.Server.accept(port) end}]
+    children = [
+      {Task, fn -> IRC.Server.accept(port) end},
+      {Task.Supervisor, name: IRC.ServerSupervisor}
+    ]
 
-    opts = [strategy: :one_for_one, name: KVServer.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(children, [restart: :permanent, strategy: :one_for_one])
   end
 end

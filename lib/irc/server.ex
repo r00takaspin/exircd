@@ -19,13 +19,23 @@ defmodule IRC.Server do
 
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    Task.start_link(fn -> serve(client) end)
+    {:ok, pid} = Task.Supervisor.start_child(IRC.ServerSupervisor, fn -> serve(client) end)
+    :ok = :gen_tcp.controlling_process(client, pid)
     loop_acceptor(socket)
   end
 
   defp serve(socket) do
     socket
     |> read_line()
+    |> IRC.Command.parse
+    |> case do
+         {:ok, command} ->
+           case IRC.Command.run(command) do
+             {:ok, reply} -> IRC.Reply.success(reply)
+             {:error, reply} -> IRC.Reply.error(reply)
+           end
+         {:error, reply} -> IO.inspect(reply); IRC.Reply.error(reply)
+       end
     |> write_line(socket)
 
     serve(socket)
