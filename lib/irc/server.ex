@@ -16,7 +16,7 @@ defmodule IRC.Server do
   def init(:ok), do: {:ok, %{}}
 
   @doc """
-    Запуск сервер на указанном порту
+    Запуск сервера на указанном порту
   """
 
   def accept(port) do
