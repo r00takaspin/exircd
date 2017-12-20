@@ -1,4 +1,8 @@
 defmodule IRC.ServerSupervisor do
+  @moduledoc """
+    Супервизор TCP сервера
+  """
+
   use Supervisor
 
   def start_link(opts) do
@@ -7,7 +11,7 @@ defmodule IRC.ServerSupervisor do
 
   def init(:ok) do
     children = [
-      IRC.Server, name: IRC.Server
+      IRC.Server, name: IRC.Server,
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

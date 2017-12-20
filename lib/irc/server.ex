@@ -1,7 +1,13 @@
 require Logger
 
 defmodule IRC.Server do
+  @moduledoc """
+    Сервер принимающий TCP соединения
+  """
+
   use GenServer
+
+  alias IRC.{ServerSupervisor, Reply, Command}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -9,6 +15,9 @@ defmodule IRC.Server do
 
   def init(:ok), do: {:ok, %{}}
 
+  @doc """
+    Запуск сервер на указанном порту
+  """
 
   def accept(port) do
     {:ok, socket} = :gen_tcp.listen(port,
@@ -19,22 +28,26 @@ defmodule IRC.Server do
 
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    {:ok, pid} = Task.Supervisor.start_child(IRC.ServerSupervisor, fn -> serve(client) end)
+    {:ok, pid} = start_client(client)
     :ok = :gen_tcp.controlling_process(client, pid)
     loop_acceptor(socket)
+  end
+
+  defp start_client(client) do
+    Task.Supervisor.start_child(ServerSupervisor, fn -> serve(client) end)
   end
 
   defp serve(socket) do
     socket
     |> read_line()
-    |> IRC.Command.parse
+    |> Command.parse
     |> case do
          {:ok, command} ->
-           case IRC.Command.run(command) do
-             {:ok, reply} -> IRC.Reply.success(reply)
-             {:error, reply} -> IRC.Reply.error(reply)
+           case Command.run(command) do
+             {:ok, _} -> Reply.success
+             {:error, reply} -> Reply.error(reply)
            end
-         {:error, reply} -> IO.inspect(reply); IRC.Reply.error(reply)
+         {:error, reply} -> Reply.error(reply)
        end
     |> write_line(socket)
 

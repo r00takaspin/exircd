@@ -1,4 +1,8 @@
 defmodule IRC.Command do
+  @moduledoc """
+    Парсинг и выполнение IRC комманд
+  """
+
   @doc ~S"""
   Parses the given `line` into a command.
 
@@ -16,13 +20,13 @@ defmodule IRC.Command do
     {:error, "Unknown command"}
 
     iex> IRC.Command.parse("NICK")
-    {:error, :ERR_NONICKNAMEGIVEN}
+    {:error, {:ERR_NONICKNAMEGIVEN}}
   """
   def parse(line) do
     line
     |> String.split
     |> case do
-        ["NICK"] -> {:error, :ERR_NONICKNAMEGIVEN}
+        ["NICK"] -> {:error, {:ERR_NONICKNAMEGIVEN}}
         ["NICK", nick] -> {:ok, {:nick, nick}}
         _ -> {:error, "Unknown command"}
        end
@@ -30,9 +34,15 @@ defmodule IRC.Command do
 
   def run({:nick, nick}) do
     nick
-    |> UserRegistry.find
+    |> UserRegistry.lookup
     |> case do
-         {:ok, user} -> User.nick(user, nick)
-       end
+       :error ->
+         case UserRegistry.create(nick) do
+           {:ok, user} -> {:ok, user}
+           {:error, :nickinvalid} -> {:error, {:ERR_ERRONEUSNICKNAME, nick}}
+         end
+       {:ok, user} ->
+         User.nick(user, nick)
+     end
   end
 end

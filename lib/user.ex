@@ -1,5 +1,5 @@
 defmodule User do
-  @docmodule """
+  @moduledoc """
     Процесс хранящий все данные пользователя
   """
 
@@ -30,13 +30,9 @@ defmodule User do
   """
   def lock(user), do: GenServer.cast(user, :lock)
 
-  @doc """
-    Проверка пользователя на предмет блокировки
-  """
-  def locked?(user), do: GenServer.call(:user, :is_locked)
-
-
-  def handle_call({:nick, _}, _, %User{locked: true} = user), do: { :reply, {:error, :locked}, user }
+  def handle_call({:nick, _}, _, %User{locked: true} = user) do
+    {:reply, {:error, :locked}, user}
+  end
   def handle_call({:nick, nick}, _from, %User{} = user) do
     nick
     |> nick_valid?
@@ -46,9 +42,9 @@ defmodule User do
        end
   end
 
-  def handle_call(:is_locked, _, user), do: {:reply, :ok}
-
   def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}
 
-  defp nick_valid?(nick), do: Regex.match?(~r/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,9}\z/i, nick)
+  defp nick_valid?(nick) do
+    Regex.match?(~r/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,9}\z/i, nick)
+  end
 end

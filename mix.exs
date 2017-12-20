@@ -7,7 +7,8 @@ defmodule ExIRCd.Mixfile do
       version: "0.1.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: [test: "test --no-start"]
     ]
   end
 
@@ -19,6 +20,9 @@ defmodule ExIRCd.Mixfile do
   end
 
   defp deps do
-    []
+    [
+      {:dogma, "~> 0.1", only: :dev},
+      {:credo, "~> 0.8", only: [:dev, :test], runtime: false}
+    ]
   end
 end

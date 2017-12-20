@@ -1,6 +1,6 @@
 # Реализация IRC сервера на Elixir
 
-###### Реализация спецификации [RFC-1459](http://www.kvirc.ru/wiki/Спецификация_IRC_протокола_(rfc1459)_на_русском_языке)  
+###### Реализация спецификации [RFC-2812](https://tools.ietf.org/html/rfc2812)  
 
 Запуск: 
 ```bash 
@@ -15,7 +15,7 @@ mix run --no-halt
 	- [X] ERR_NONICKNAMEGIVEN
 	- [ ] ERR_NICKNAMEINUSE
 	- [ ] ERR_UNAVAILRESOURCE
-	- [ ] ERR_ERRONEUSNICKNAME
+	- [X] ERR_ERRONEUSNICKNAME
 	- [ ] ERR_NICKCOLLISION
 	- [ ] ERR_RESTRICTED
 - [ ] USER
