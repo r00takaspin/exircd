@@ -3,6 +3,8 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
+  alias IRC.{UserRegistry, Session}
+
   @doc ~S"""
   Parses the given `line` into a command.
 
@@ -32,17 +34,18 @@ defmodule IRC.Command do
        end
   end
 
-  def run({:nick, nick}) do
+  def run(session, {:nick, nick}) do
     nick
     |> UserRegistry.lookup
     |> case do
        :error ->
          case UserRegistry.create(nick) do
-           {:ok, user} -> {:ok, user}
+           {:ok, user} ->
+             session |> Session.attach_user(user)
+             {:ok, user}
            {:error, :nickinvalid} -> {:error, {:ERR_ERRONEUSNICKNAME, nick}}
          end
-       {:ok, user} ->
-         User.nick(user, nick)
+       {:ok, _} -> {:error, {:ERR_NICKNAMEINUSE, nick}}
      end
   end
 end

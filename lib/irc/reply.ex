@@ -5,9 +5,10 @@ defmodule IRC.Reply do
 
   def response_codes do
     %{
+      ERR_NICKNAMEINUSE:    433,
       ERR_ERRONEUSNICKNAME: 432,
       ERR_NONICKNAMEGIVEN:  431,
-      ERR_UNAVAILRESOURCE:  437,
+      ERR_UNAVAILRESOURCE:  437
     }
   end
 
@@ -23,6 +24,11 @@ defmodule IRC.Reply do
   end
   def error({:ERR_ERRONEUSNICKNAME, nick}) do
     "#{response_codes()[:ERR_ERRONEUSNICKNAME]} <#{nick}> :Erroneous nickname"
+    |> format
+  end
+  def error({:ERR_NICKNAMEINUSE, nick}) do
+    code = response_codes()[:ERR_NICKNAMEINUSE]
+    "#{code} <#{nick}> :Nickname is already in use"
     |> format
   end
   def error(_) do "Unknown error" |> format end

@@ -15,21 +15,21 @@ defmodule IRC.SessionRegistry do
     {:ok, %{}}
   end
 
-  def lookup(storage, session) when is_pid(session) do
-    socket = Session.socket(session)
-    lookup(storage, socket)
-  end
   def lookup(storage, socket) do
     GenServer.call(storage, {:lookup, socket})
   end
-
-  def add(storage, session) do
-    GenServer.cast(storage, {:create, session})
+  def lookup(socket) do
+    GenServer.call(__MODULE__, {:lookup, socket})
   end
 
-  def handle_cast({:create, session}, sessions) do
-    socket = Session.socket(session)
+  def create(storage \\ __MODULE__, socket) do
+    GenServer.cast(storage, {:create, socket})
+  end
+
+  def handle_cast({:create, socket}, sessions) do
     if Map.fetch(sessions, socket) == :error do
+      {:ok, session} = Session.start_link([])
+      session |> Session.attach_socket(socket)
       {:noreply, Map.put(sessions, socket, session)}
     else
       {:noreply, sessions}

@@ -7,7 +7,7 @@ defmodule IRC.Server do
 
   use GenServer
 
-  alias IRC.{ServerSupervisor, Reply, Command}
+  alias IRC.{ServerSupervisor, Reply, Command, SessionRegistry}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -38,12 +38,14 @@ defmodule IRC.Server do
   end
 
   defp serve(socket) do
+    {:ok, session} = socket |> init_session
+
     socket
     |> read_line()
     |> Command.parse
     |> case do
          {:ok, command} ->
-           case Command.run(command) do
+           case Command.run(session, command) do
              {:ok, _} -> Reply.success
              {:error, reply} -> Reply.error(reply)
            end
@@ -52,6 +54,17 @@ defmodule IRC.Server do
     |> write_line(socket)
 
     serve(socket)
+  end
+
+  defp init_session(socket) do
+    socket
+    |> SessionRegistry.lookup
+    |> case do
+         :error ->
+           SessionRegistry.create(socket)
+           init_session(socket)
+         msg -> msg
+       end
   end
 
   defp read_line(socket) do
