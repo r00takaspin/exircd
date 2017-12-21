@@ -1,4 +1,4 @@
-defmodule User do
+defmodule IRC.User do
   @moduledoc """
     Процесс хранящий все данные пользователя
   """
@@ -6,6 +6,8 @@ defmodule User do
   defstruct nick: "", locked: false
 
   use GenServer
+
+  alias IRC.User
 
   @doc """
     Запуск процесса пользователя

@@ -1,6 +1,8 @@
 defmodule UserRegistryTest do
   use ExUnit.Case, async: true
 
+  alias IRC.UserRegistry
+
   setup do
     {:ok, registry} = UserRegistry.start_link([])
     %{registry: registry}

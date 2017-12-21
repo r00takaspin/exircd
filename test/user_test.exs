@@ -1,6 +1,8 @@
 defmodule UserTest do
   use ExUnit.Case, async: true
 
+  alias IRC.User
+
   setup do
     {:ok, user} = User.start_link([])
     %{user: user}

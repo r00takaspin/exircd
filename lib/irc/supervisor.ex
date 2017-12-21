@@ -5,7 +5,7 @@ defmodule IRC.Supervisor do
 
   use Supervisor
 
-  alias IRC.{ServerSupervisor, Server}
+  alias IRC.{ServerSupervisor, Server, SessionRegistry, UserRegistry}
 
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, :ok, opts)
@@ -17,7 +17,8 @@ defmodule IRC.Supervisor do
     children = [
       {Task, fn -> Server.accept(port) end},
       {Task.Supervisor, name: ServerSupervisor},
-      {UserRegistry, name: UserRegistry}
+      {UserRegistry, name: UserRegistry},
+      {SessionRegistry, name: SessionRegistry}
     ]
 
     Supervisor.init(children, strategy: :one_for_one, restart: :permanent)
