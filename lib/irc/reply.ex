@@ -37,6 +37,7 @@ defmodule IRC.Reply do
     Вывод успешно завершенных комманд
   """
   def success do "" end
+  def success(_params), do: raise "not_implemented"
 
   defp format(str), do: "#{str}\r\n"
 end

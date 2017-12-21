@@ -10,7 +10,7 @@ defmodule IRC.CommandTest do
     end
 
     setup do
-      session = Session.start_link([])
+      {:ok, session} = Session.start_link([])
       {:ok, _} = UserRegistry.start_link([name: UserRegistry])
       %{session: session}
     end

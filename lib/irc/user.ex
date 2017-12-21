@@ -3,7 +3,7 @@ defmodule IRC.User do
     Процесс хранящий все данные пользователя
   """
 
-  defstruct nick: "", locked: false
+  defstruct nick: nil, locked: false
 
   use GenServer
 
@@ -28,9 +28,20 @@ defmodule IRC.User do
   end
 
   @doc """
+    Возвращает никнейм пользователя
+  """
+  def nick(user) do
+    GenServer.call(user, :get_nick)
+  end
+
+  @doc """
     Блокировка пользователя
   """
   def lock(user), do: GenServer.cast(user, :lock)
+
+  def handle_call(:get_nick, _, %User{nick: nick} = user) do
+    {:reply, {:ok, nick}, user}
+  end
 
   def handle_call({:nick, _}, _, %User{locked: true} = user) do
     {:reply, {:error, :locked}, user}
@@ -40,7 +51,7 @@ defmodule IRC.User do
     |> nick_valid?
     |> case do
          true -> {:reply, {:ok, nick}, %{user | nick: nick}}
-         false -> {:reply, {:error, :nickinvalid}, user}
+         false -> {:reply, {:error, {:nickinvalid, nick}}, user}
        end
   end
 

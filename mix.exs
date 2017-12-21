@@ -23,7 +23,8 @@ defmodule ExIRCd.Mixfile do
     [
       {:dogma, "~> 0.1", only: :dev},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:pre_commit, "~> 0.2.4", only: :dev}
+      {:pre_commit, "~> 0.2.4", only: :dev},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 end
