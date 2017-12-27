@@ -3,7 +3,7 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.{UserRegistry, Session}
+  alias IRC.{UserRegistry, Commands.Nick}
 
   @doc ~S"""
   Parses the given `line` into a command.
@@ -22,30 +22,24 @@ defmodule IRC.Command do
     {:error, "Unknown command"}
 
     iex> IRC.Command.parse("NICK")
-    {:error, {:ERR_NONICKNAMEGIVEN}}
+    {:ok, :nick}
   """
   def parse(line) do
     line
     |> String.split
     |> case do
-        ["NICK"] -> {:error, {:ERR_NONICKNAMEGIVEN}}
+        ["NICK"] -> {:ok, :nick}
         ["NICK", nick] -> {:ok, {:nick, nick}}
         _ -> {:error, "Unknown command"}
        end
   end
 
+  @spec run(IRC.Session.t, :nick) :: {:error, term}
+  def run(session, :nick) do
+    Nick.run(nil, session, UserRegistry)
+  end
+  @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
   def run(session, {:nick, nick}) do
-    nick
-    |> UserRegistry.lookup
-    |> case do
-       :error ->
-         case UserRegistry.create(nick) do
-           {:ok, user} ->
-             session |> Session.attach_user(user)
-             {:ok, user}
-           {:error, :nickinvalid} -> {:error, {:ERR_ERRONEUSNICKNAME, nick}}
-         end
-       {:ok, _} -> {:error, {:ERR_NICKNAMEINUSE, nick}}
-     end
+    Nick.run(nick, session, UserRegistry)
   end
 end

@@ -8,13 +8,13 @@ defmodule UserTest do
     %{user: user}
   end
 
-  describe "lock/1" do
+  describe "lock/2" do
     test "locks user", %{user: user} do
       assert user |> User.lock == :ok
     end
   end
 
-  describe "nick/1" do
+  describe "nick/2" do
     def subject(user, nick), do: User.nick(user, nick)
 
     @new_name "valid_nick"
@@ -24,11 +24,12 @@ defmodule UserTest do
     end
 
     test "empty nickname", %{user: user} do
-      assert user |> subject("") == {:error, :nickinvalid}
+      assert user |> subject("") == {:error, {:nickinvalid, ""}}
     end
 
+    @long_nick "verylongnickname"
     test "nickname more than 9+ characters", %{user: user} do
-      assert user |> subject("verylongnickname") == {:error, :nickinvalid}
+      assert user |> subject(@long_nick) == {:error, {:nickinvalid, @long_nick}}
     end
 
     test "user is locked", %{user: user} do

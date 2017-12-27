@@ -46,8 +46,8 @@ defmodule IRC.Server do
     |> case do
          {:ok, command} ->
            case Command.run(session, command) do
-             {:ok, _} -> Reply.success
              {:error, reply} -> Reply.error(reply)
+             :ok -> Reply.success
            end
          {:error, reply} -> Reply.error(reply)
        end
