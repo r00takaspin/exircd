@@ -34,9 +34,11 @@ defmodule IRC.Command do
        end
   end
 
+  @spec run(IRC.Session.t, :nick) :: {:error, term}
   def run(session, :nick) do
     Nick.run(nil, session, UserRegistry)
   end
+  @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
   def run(session, {:nick, nick}) do
     Nick.run(nick, session, UserRegistry)
   end

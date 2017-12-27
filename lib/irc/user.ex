@@ -5,6 +5,8 @@ defmodule IRC.User do
 
   defstruct nick: nil, locked: false
 
+  @type t :: %IRC.User{nick: String.t, locked: boolean}
+
   use GenServer
 
   alias IRC.User
@@ -23,6 +25,9 @@ defmodule IRC.User do
   @doc """
     Задается никнейм пользователя
   """
+  @type nick_invalid :: {:error, {:nickinvalid, String.t}}
+  @type nick_response :: {:ok, String.t} | nick_invalid
+  @spec nick(user::pid(), nick::String.t) :: nick_response
   def nick(user, nick) do
     GenServer.call(user, {:nick, nick})
   end
@@ -30,6 +35,7 @@ defmodule IRC.User do
   @doc """
     Возвращает никнейм пользователя
   """
+  @spec nick(pid()) :: {:ok, String.t}
   def nick(user) do
     GenServer.call(user, :get_nick)
   end
@@ -37,6 +43,7 @@ defmodule IRC.User do
   @doc """
     Блокировка пользователя
   """
+  @spec lock(pid()) :: :ok
   def lock(user), do: GenServer.cast(user, :lock)
 
   def handle_call(:get_nick, _, %User{nick: nick} = user) do

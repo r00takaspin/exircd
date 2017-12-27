@@ -38,9 +38,13 @@ defmodule IRC.Commands.NickTest do
       loopa = "loopa"
       {:ok, user} = registry |> UserRegistry.create(poopa)
       session |> Session.attach_user(user)
-      assert :ok == subject(loopa, session, registry)
 
+      assert :ok == subject(loopa, session, registry)
       assert :ok == subject(poopa, session, registry)
+    end
+
+    test "register valid user", %{session: session, registry: registry} do
+      assert :ok == subject("valid_nick", session, registry)
     end
   end
 end

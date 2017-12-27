@@ -13,16 +13,31 @@ defmodule IRC.UserRegistry do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  def lookup(server \\ __MODULE__, nick) do
-    GenServer.call(server, {:lookup, nick})
+  @doc """
+    Поиск пользователя по никнейму
+  """
+  @type lookup_result :: {:ok, pid()} | :error
+  @spec lookup(registry::pid() | atom(), nick::String.t) :: lookup_result
+  def lookup(registry \\ __MODULE__, nick) do
+    GenServer.call(registry, {:lookup, nick})
   end
 
-  def create(server \\ __MODULE__, nick) do
-    GenServer.call(server, {:create, nick})
+  @doc """
+    Создаем нового пользователя с указанным никнеймом
+  """
+
+  @type nick_errors :: nick_in_use | IRC.User.nick_response
+  @type nick_in_use :: {:error, {:nickinuse, Strint.t}}
+  @type create_response :: nick_errors | {:ok, pid()}
+
+  @spec create(registry::pid() | atom(), String.t) :: create_response
+  def create(registry \\ __MODULE__, nick) do
+    GenServer.call(registry, {:create, nick})
   end
 
-  def change_nick(server \\ __MODULE__, old_nick, nick) do
-    GenServer.call(server, {:change_nick, old_nick, nick})
+  @spec change_nick(registry::pid() | atom(), String.t, String.t) :: nick_errors
+  def change_nick(registry \\ __MODULE__, old_nick, nick) do
+    GenServer.call(registry, {:change_nick, old_nick, nick})
   end
 
   def init(:ok) do
@@ -57,9 +72,11 @@ defmodule IRC.UserRegistry do
       nick_in_use(nicknames, nick)
     else
       {:ok, user} = User.start_link([])
-      case User.nick(user, nick) do
+      user
+      |> User.nick(nick)
+      |> case do
         {:ok, nick} -> {:reply, {:ok, user}, Map.put(nicknames, nick, user)}
-        msg -> {:reply, msg, nicknames}
+        {:error, error} -> {:reply, {:error, error}, nicknames}
       end
     end
   end

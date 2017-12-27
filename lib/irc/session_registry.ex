@@ -1,6 +1,6 @@
 defmodule IRC.SessionRegistry do
   @moduledoc ~S"""
-    Хранение сессий пользователей
+    Реестр сессий пользователей
   """
 
   use GenServer
@@ -15,13 +15,18 @@ defmodule IRC.SessionRegistry do
     {:ok, %{}}
   end
 
-  def lookup(storage, socket) do
+#  @doc """
+#    Проверить наличие сокета в реестре
+#  """
+#  @spec lookup(pid(), port()) :: {:ok, port()} | :error
+  def lookup(storage \\ __MODULE__, socket) do
     GenServer.call(storage, {:lookup, socket})
   end
-  def lookup(socket) do
-    GenServer.call(__MODULE__, {:lookup, socket})
-  end
 
+#  @doc """
+#    Асинхронное добавление сокета в реестр
+#  """
+#  @spec create(pid(), port()) :: :ok
   def create(storage \\ __MODULE__, socket) do
     GenServer.cast(storage, {:create, socket})
   end
