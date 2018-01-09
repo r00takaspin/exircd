@@ -47,11 +47,14 @@ defmodule IRC.Commands.Nick do
       end
   end
 
-  def format_output(:ok), do: :ok
-  def format_output({:error, msg}), do: format_error(msg)
+  defp format_output(:ok), do: :ok
+  defp format_output({:error, msg}), do: format_error(msg)
 
   defp format_error({:invalid_params}) do
     {:error, {:ERR_NONICKNAMEGIVEN}}
+  end
+  defp format_error({:nick_banned, nick}) do
+    {:error, {:ERR_UNAVAILRESOURCE, nick}}
   end
   defp format_error({:nickinvalid, nick}) do
     {:error, {:ERR_ERRONEUSNICKNAME, nick}}

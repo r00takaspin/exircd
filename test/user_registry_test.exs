@@ -40,4 +40,29 @@ defmodule UserRegistryTest do
       {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick)
     end
   end
+
+  describe "ban/2" do
+    @poopa "poopa"
+    test "ban existing user: #{@poopa}", %{registry: registry} do
+      registry |> UserRegistry.create(@poopa)
+      assert :ok == registry |> UserRegistry.ban(@poopa)
+    end
+
+    @loopa "loopa"
+    test "ban not existing user: #{@loopa}", %{registry: registry} do
+      assert :ok == registry |> UserRegistry.ban(@loopa)
+    end
+  end
+
+  describe "banned?/2" do
+    @poopa "poopa"
+    test "false if user: #{@poopa} doesn't exists", %{registry: registry} do
+      refute registry |> UserRegistry.banned?(@poopa)
+    end
+
+    test "true if user: #{@poopa} is already banned", %{registry: registry} do
+      registry |> UserRegistry.ban(@poopa)
+      assert registry |> UserRegistry.banned?(@poopa)
+    end
+  end
 end

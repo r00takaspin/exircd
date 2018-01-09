@@ -18,6 +18,10 @@ defmodule IRC.Reply do
     Вывод ошибок
   """
 
+  def error({:ERR_UNAVAILRESOURCE, nick}) do
+    "<#{nick}> :Nick/channel is temporarily unavailable"
+    |> format
+  end
   def error({:ERR_NONICKNAMEGIVEN}) do
     "#{response_codes()[:ERR_NONICKNAMEGIVEN]} :No nickname given"
     |> format
