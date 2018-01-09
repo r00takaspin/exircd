@@ -2,12 +2,29 @@
 
 ###### Реализация спецификации [RFC-2812](https://tools.ietf.org/html/rfc2812)  
 
+Сервер является учебной имплементацией протокола IRC. Побочной целью проекта является получение опыта написания реализации открытого протокола по спецификации.
+
+Зависимости:
+* Elixir
+
+Установка:
+
+```bash
+mix deps.get
+```
+
 Запуск: 
 ```bash 
 mix run --no-halt
 ```
 
-Подключиться:
+Запуск в интерактивном режиме:
+```bash 
+iex -S mix
+```
+
+
+Подключение:
 ```bash
 telnet localhost 6667
 ```
@@ -19,7 +36,7 @@ telnet localhost 6667
 - [ ] NICK
 	- [X] ERR_NONICKNAMEGIVEN
 	- [X] ERR_NICKNAMEINUSE
-	- [ ] ERR_UNAVAILRESOURCE
+	- [X] ERR_UNAVAILRESOURCE
 	- [X] ERR_ERRONEUSNICKNAME
 	- [ ] ERR_NICKCOLLISION
 	- [ ] ERR_RESTRICTED
