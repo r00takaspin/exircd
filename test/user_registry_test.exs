@@ -1,11 +1,12 @@
 defmodule UserRegistryTest do
   use ExUnit.Case, async: true
 
-  alias IRC.UserRegistry
+  alias IRC.{User, UserRegistry}
 
   setup do
     {:ok, registry} = UserRegistry.start_link([])
-    %{registry: registry}
+    {:ok, user} = User.start_link([])
+    %{registry: registry, user: user}
   end
 
   describe "lookup/1" do
@@ -14,8 +15,8 @@ defmodule UserRegistryTest do
       assert registry |> UserRegistry.lookup(@nick) == :error
     end
 
-    test "find existing nickname", %{registry: registry} do
-      registry |> UserRegistry.create(@nick)
+    test "find existing nickname", %{registry: registry, user: user} do
+      registry |> UserRegistry.create(@nick, user)
       {:ok, pid} = registry |> UserRegistry.lookup(@nick)
       assert is_pid(pid)
     end
@@ -25,26 +26,27 @@ defmodule UserRegistryTest do
 
     @old_nick "poopa"
     @new_nick "loopa"
-    test "user not found", %{registry: registry} do
-      subject = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
+
+    test "user not found", %{registry: registry, user: user} do
+      subject = registry |> UserRegistry.change_nick(@old_nick, @new_nick, user)
       assert  subject == {:error, :not_found}
     end
 
-    test "change nick several times", %{registry: registry} do
-      registry |> UserRegistry.create(@old_nick)
-      {:ok, _} = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
+    test "change nick several times", %{registry: registry, user: user} do
+      registry |> UserRegistry.create(@old_nick, user)
+      {:ok, _} = registry |> UserRegistry.change_nick(@old_nick, @new_nick, user)
 
       {:ok, loopa} = registry |> UserRegistry.lookup(@new_nick)
-      assert {:ok, @new_nick} == loopa |> IRC.User.nick
+      assert @new_nick == loopa |> IRC.User.nick
 
-      {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick)
+      {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick, user)
     end
   end
 
   describe "ban/2" do
     @poopa "poopa"
-    test "ban existing user: #{@poopa}", %{registry: registry} do
-      registry |> UserRegistry.create(@poopa)
+    test "ban existing user: #{@poopa}", %{registry: registry, user: user} do
+      registry |> UserRegistry.create(@poopa, user)
       assert :ok == registry |> UserRegistry.ban(@poopa)
     end
 

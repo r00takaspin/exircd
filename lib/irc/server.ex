@@ -38,16 +38,19 @@ defmodule IRC.Server do
   end
 
   defp serve(socket) do
-    {:ok, session} = socket |> init_session
+    session = socket |> init_session
 
     socket
     |> read_line()
     |> Command.parse
     |> case do
          {:ok, command} ->
-           case Command.run(session, command) do
+          result = Command.run(session, command)
+
+           case result do
              {:error, reply} -> Reply.error(reply)
-             :ok -> Reply.success
+             {:ok, reply} -> Reply.reply(reply)
+             :ok -> Reply.reply
            end
          {:error, reply} -> Reply.error(reply)
        end
@@ -63,7 +66,7 @@ defmodule IRC.Server do
          :error ->
            SessionRegistry.create(socket)
            init_session(socket)
-         msg -> msg
+         {:ok, session} -> session
        end
   end
 

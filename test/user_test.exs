@@ -20,7 +20,7 @@ defmodule UserTest do
     @new_name "valid_nick"
 
     test "change nickname to #{@new_name}", %{user: user} do
-     assert user |> subject(@new_name) == {:ok, @new_name}
+      assert user |> subject(@new_name) == {:ok, @new_name}
     end
 
     test "empty nickname", %{user: user} do
@@ -36,6 +36,24 @@ defmodule UserTest do
       user |> User.lock
 
       assert user |> subject("any") == {:error, :locked}
+    end
+  end
+
+  @login "poopa"
+  @mode "w"
+  @real_name "Vasya Pupkin"
+
+  describe "user/4" do
+    test "register user", %{user: user} do
+      result = user |> User.user(@login, @mode, @real_name)
+      assert :ok == result
+    end
+
+    test "register twice", %{user: user} do
+      user |> User.user(@login, @mode, @real_name)
+      result = user |> User.user(@login, @mode, @real_name)
+
+      assert {:error, :already_registered} == result
     end
   end
 end

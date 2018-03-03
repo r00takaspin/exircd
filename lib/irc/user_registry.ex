@@ -34,13 +34,13 @@ defmodule IRC.UserRegistry do
   @type create_response :: nick_errors | {:ok, pid()}
 
   @spec create(registry::pid() | atom(), String.t) :: create_response
-  def create(registry \\ __MODULE__, nick) do
-    GenServer.call(registry, {:create, nick})
+  def create(registry \\ __MODULE__, nick, user) do
+    GenServer.call(registry, {:create, nick, user})
   end
 
   @spec change_nick(pid_or_atom(), String.t, String.t) :: create_response
-  def change_nick(registry \\ __MODULE__, old_nick, nick) do
-    GenServer.call(registry, {:change_nick, old_nick, nick})
+  def change_nick(registry \\ __MODULE__, old_nick, nick, user) do
+    GenServer.call(registry, {:change_nick, old_nick, nick, user})
   end
 
   @spec banned?(pid_or_atom(), nick::String.t) :: boolean
@@ -49,7 +49,7 @@ defmodule IRC.UserRegistry do
   end
 
   @spec ban(registy::pid(), nick::String.t) :: :ok
-  def ban(registry  , nick) do
+  def ban(registry, nick) do
     GenServer.cast(registry, {:ban, nick})
   end
 
@@ -67,12 +67,12 @@ defmodule IRC.UserRegistry do
     {:reply, Map.fetch(nicknames, nick), state}
   end
 
-  def handle_call({:change_nick, old_nick, nick}, _from, state) do
-    nick(state, old_nick, nick)
+  def handle_call({:change_nick, old_nick, nick, user}, _from, state) do
+    nick(state, old_nick, nick, user)
   end
 
-  def handle_call({:create, nick}, _from, state) do
-    nick(state, nick)
+  def handle_call({:create, nick, user}, _from, state) do
+    nick(state, nick, user)
   end
 
   def handle_cast({:ban, nick}, %UserRegistry{} = state) do
@@ -89,29 +89,28 @@ defmodule IRC.UserRegistry do
     end
   end
 
-  defp nick(%UserRegistry{} = state, nick) do
+  defp nick(%UserRegistry{} = state, nick, user) do
     cond do
       _nick_exists?(state.nicknames, nick) -> nick_in_use_reply(state, nick)
       _banned?(state.banned_nicks, nick) -> nick_banned_reply(state, nick)
-      true -> _create_nick(state, nick)
+      true -> _create_nick(state, nick, user)
     end
   end
 
-  defp nick(%UserRegistry{} = state, old_nick, nick) do
+  defp nick(%UserRegistry{} = state, old_nick, nick, user) do
     cond do
       _nick_exists?(state.nicknames, nick) -> nick_in_use_reply(state, nick)
       _banned?(state.banned_nicks, nick) -> nick_banned_reply(state, nick)
-      true -> _change_nick(state, old_nick, nick)
+      true -> _change_nick(state, old_nick, nick, user)
     end
   end
 
-  defp _create_nick(%UserRegistry{nicknames: nicknames} = state, nick) do
-    {:ok, user} = User.start_link([])
+  defp _create_nick(%UserRegistry{nicknames: nicknames} = state, nick, user) do
     state = %{state | nicknames: nicknames |> Map.put(nick, user)}
     state |> _execute_nick(nick, user)
   end
 
-  defp _change_nick(%UserRegistry{} = state, old_nick, nick) do
+  defp _change_nick(%UserRegistry{} = state, old_nick, nick, user) do
     state.nicknames
     |> Map.fetch(old_nick)
     |> case do

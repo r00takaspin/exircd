@@ -3,7 +3,7 @@ defmodule IRC.User do
     Процесс хранящий все данные пользователя
   """
 
-  defstruct nick: nil, locked: false
+  defstruct nick: nil, locked: false, realname: "", mode: "", registered: false, login: ""
 
   @type t :: %IRC.User{nick: String.t, locked: boolean}
 
@@ -29,7 +29,12 @@ defmodule IRC.User do
   @type nick_response :: {:ok, String.t} | nick_invalid
   @spec nick(user::pid(), nick::String.t) :: nick_response
   def nick(user, nick) do
-    GenServer.call(user, {:nick, nick})
+    nick
+    |> nick_valid?
+    |> case do
+        true -> GenServer.call(user, {:nick, nick})
+        false -> {:error, {:nickinvalid, nick}}
+       end
   end
 
   @doc """
@@ -40,26 +45,52 @@ defmodule IRC.User do
     GenServer.call(user, :get_nick)
   end
 
+  def user(user, login, mode, realname) do
+    GenServer.call(user, {:user, login, mode, realname})
+  end
+
   @doc """
     Блокировка пользователя
   """
   @spec lock(pid()) :: :ok
   def lock(user), do: GenServer.cast(user, :lock)
 
-  def handle_call(:get_nick, _, %User{nick: nick} = user) do
-    {:reply, {:ok, nick}, user}
-  end
+  def handle_call(:get_nick, _, %User{nick: nick} = user), do: {:reply, nick, user}
+
+  #NICK
 
   def handle_call({:nick, _}, _, %User{locked: true} = user) do
     {:reply, {:error, :locked}, user}
   end
-  def handle_call({:nick, nick}, _from, %User{} = user) do
-    nick
-    |> nick_valid?
-    |> case do
-         true -> {:reply, {:ok, nick}, %{user | nick: nick}}
-         false -> {:reply, {:error, {:nickinvalid, nick}}, user}
-       end
+  def handle_call({:nick, nick}, _from, %User{registered: true, nick: nil} = user) do
+    {:reply, :welcome, %{user | nick: nick}}
+  end
+  def handle_call({:nick, nick}, _from, %User{registered: false} = user) do
+    {:reply, {:ok, nick}, %{user | nick: nick}}
+  end
+  def handle_call({:nick, nick}, _from, user) do
+    {:reply, {:ok, nick}, %{user | nick: nick}}
+  end
+
+  #USER
+
+  def handle_call({:user, _, _, _}, _from, %User{registered: true} = user) do
+    {:reply, {:error, :already_registered}, user}
+  end
+
+  def handle_call({:user, login, mode, realname}, _from, %User{nick: nil} = user) do
+    {
+      :reply,
+      :ok,
+      %{user | login: login, mode: mode, realname: realname, registered: true}
+    }
+  end
+  def handle_call({:user, login, mode, realname}, _from, user) do
+    {
+      :reply,
+      :welcome,
+      %{user | login: login, mode: mode, realname: realname, registered: true}
+    }
   end
 
   def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}

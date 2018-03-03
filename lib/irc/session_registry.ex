@@ -5,7 +5,7 @@ defmodule IRC.SessionRegistry do
 
   use GenServer
 
-  alias IRC.Session
+  alias IRC.{Session, User}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -35,6 +35,8 @@ defmodule IRC.SessionRegistry do
     if Map.fetch(sessions, socket) == :error do
       {:ok, session} = Session.start_link([])
       session |> Session.attach_socket(socket)
+      {:ok, user} = User.start_link([])
+      session |> Session.attach_user(user)
       {:noreply, Map.put(sessions, socket, session)}
     else
       {:noreply, sessions}
