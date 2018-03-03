@@ -1,15 +1,19 @@
 defmodule IRC.Commands.NickTest do
   use ExUnit.Case, async: true
 
-  alias IRC.{UserRegistry, Session, Commands.Nick}
+  alias IRC.{UserRegistry, SessionRegistry, Commands.Nick}
 
   describe "run/3" do
     def subject(nick, session, user_registry) do
       Nick.run(nick, session, user_registry)
     end
 
+    @socket "123213213"
+
     setup do
-      {:ok, session} = Session.start_link([])
+      {:ok, _} = SessionRegistry.start_link([name: SessionRegistry])
+      SessionRegistry.create(@socket)
+      {:ok, session} = SessionRegistry.lookup(@socket)
       {:ok, registry} = UserRegistry.start_link([])
       %{session: session, registry: registry}
     end
@@ -32,7 +36,9 @@ defmodule IRC.Commands.NickTest do
     @used_nickname "voldemar"
     test "nickname in use: #{@used_nickname}", context do
       %{session: session, registry: registry} = context
-      registry |> UserRegistry.create(@used_nickname)
+      {:ok, user} = IRC.User.start_link([])
+
+      registry |> UserRegistry.create(@used_nickname, user)
       response = {:error, {:ERR_NICKNAMEINUSE, @used_nickname}}
       assert response == subject(@used_nickname, session, registry)
     end
@@ -41,8 +47,6 @@ defmodule IRC.Commands.NickTest do
       %{session: session, registry: registry} = context
       poopa = "poopa"
       loopa = "loopa"
-      {:ok, user} = registry |> UserRegistry.create(poopa)
-      session |> Session.attach_user(user)
 
       assert :ok == subject(loopa, session, registry)
       assert :ok == subject(poopa, session, registry)
