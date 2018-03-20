@@ -25,7 +25,8 @@ defmodule IRC.Commands.Nick do
            user_registry
            |> UserRegistry.create(nick, user)
          old_nick ->
-           change_nick(user_registry, old_nick, nick, user)
+           user_registry
+           |> change_nick(old_nick, nick, user)
        end
   end
 
@@ -38,6 +39,17 @@ defmodule IRC.Commands.Nick do
        end
   end
 
+  defp format_output({:welcome, [login: login, nick: nick, host: host]}) do
+    {
+      :ok,
+      [
+        {:RPL_WELCOME, nick, login, host},
+        :RPL_YOURHOST,
+        :RPL_CREATED,
+        :RPL_MYINFO
+      ]
+    }
+  end
   defp format_output(:ok), do: :ok
   defp format_output({:ok, _}), do: :ok
   defp format_output({:error, msg}), do: format_error(msg)

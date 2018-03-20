@@ -3,7 +3,7 @@ defmodule IRC.User do
     Процесс хранящий все данные пользователя
   """
 
-  defstruct nick: nil, locked: false, realname: "", mode: "", registered: false, login: ""
+  defstruct nick: nil, locked: false, realname: "", mode: "", registered: false, login: "", host: "127.0.0.1"
 
   @type t :: %IRC.User{nick: String.t, locked: boolean}
 
@@ -63,7 +63,8 @@ defmodule IRC.User do
     {:reply, {:error, :locked}, user}
   end
   def handle_call({:nick, nick}, _from, %User{registered: true, nick: nil} = user) do
-    {:reply, :welcome, %{user | nick: nick}}
+    user = %{user | nick: nick}
+    {:reply, welcome_reply(user), user}
   end
   def handle_call({:nick, nick}, _from, %User{registered: false} = user) do
     {:reply, {:ok, nick}, %{user | nick: nick}}
@@ -86,10 +87,11 @@ defmodule IRC.User do
     }
   end
   def handle_call({:user, login, mode, realname}, _from, user) do
+    user = %{user | login: login, mode: mode, realname: realname, registered: true}
     {
       :reply,
-      :welcome,
-      %{user | login: login, mode: mode, realname: realname, registered: true}
+      welcome_reply(user),
+      user
     }
   end
 
@@ -97,5 +99,9 @@ defmodule IRC.User do
 
   defp nick_valid?(nick) do
     Regex.match?(~r/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,9}\z/i, nick)
+  end
+
+  defp welcome_reply(%User{login: login, nick: nick, host: host}) do
+    {:welcome, login: login, nick: nick, host: host}
   end
 end

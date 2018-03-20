@@ -14,7 +14,7 @@ defmodule IRC.Commands.User do
     |> User.user(login, mode, realname)
     |> case do
         :ok -> :ok
-        :welcome -> format_output(:welcome, nick, login, host)
+        {:welcome, [login: login, nick: nick, host: host]} -> format_output(:welcome, nick, login, host)
         {:error, :already_registered} -> format_output(:already_registered)
        end
   end

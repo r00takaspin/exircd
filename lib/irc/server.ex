@@ -71,11 +71,20 @@ defmodule IRC.Server do
   end
 
   defp read_line(socket) do
-    {:ok, data} = :gen_tcp.recv(socket, 0)
-    data
+    :gen_tcp.recv(socket, 0)
+    |> case do
+      {:ok, data} ->
+        Logger.debug("Request: #{data}")
+        data
+
+      {:error, :closen} ->
+        Logger.debug("Connection closed")
+    end
   end
 
   defp write_line(line, socket) do
+    Logger.debug("Response: #{line}")
+
     :gen_tcp.send(socket, line)
   end
 end

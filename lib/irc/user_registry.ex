@@ -128,6 +128,7 @@ defmodule IRC.UserRegistry do
     case User.nick(user, nick) do
       {:ok, _term} -> success_reply(state, user)
       {:error, error} -> {:reply, {:error, error}, state}
+      {:welcome, msg} -> {:reply, {:welcome, msg}, state}
     end
   end
 
