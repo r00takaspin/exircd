@@ -40,21 +40,16 @@ defmodule IRC.Server do
   defp serve(socket) do
     session = socket |> init_session
 
-    socket
-    |> read_line()
-    |> Command.parse
-    |> case do
-         {:ok, command} ->
-          result = Command.run(session, command)
-
-           case result do
-             {:error, reply} -> Reply.error(reply)
-             {:ok, reply} -> Reply.reply(reply)
-             :ok -> Reply.reply
-           end
-         {:error, reply} -> Reply.error(reply)
-       end
-    |> write_line(socket)
+    with line <- read_line(socket),
+         {:ok, command} <- Command.parse(line),
+         {:ok, reply} <- Command.run(session, command) do
+            reply
+            |> Reply.reply()
+            |> write_line(socket)
+    else
+      :ok -> Reply.reply |> write_line(socket)
+      {:error, error} -> error |> Reply.error |> write_line(socket)
+    end
 
     serve(socket)
   end
@@ -79,6 +74,7 @@ defmodule IRC.Server do
 
       {:error, :closed} ->
         Logger.debug("Connection closed")
+        Process.exit(self(), :normal)
     end
   end
 

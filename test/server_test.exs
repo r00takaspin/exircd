@@ -20,8 +20,6 @@ defmodule IRC.ServerTest do
   end
 
   test "Basic registration scanario: user -> nick", %{socket: socket} do
-    :timer.sleep(1000)
-
     :gen_tcp.send(socket, "USER voldemar * * :Voldemar Duletskiy\r\n")
     :gen_tcp.send(socket, "NICK voldemar\r\n")
 

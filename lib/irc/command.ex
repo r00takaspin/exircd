@@ -29,8 +29,11 @@ defmodule IRC.Command do
     {:ok, {:user, "guest", "0", "Ronnie Reagan"}}
     iex> IRC.Command.parse("USER 2340-230489 923")
     {:ok, :user}
+
+    iex> IRC.Command.parse(true)
+    {:error, "Unknown command"}
   """
-  def parse(line) do
+  def parse(line) when is_binary(line) do
     line
     |> String.split
     |> case do
@@ -44,6 +47,7 @@ defmodule IRC.Command do
         _ -> {:error, "Unknown command"}
        end
   end
+  def parse(_), do: {:error, "Unknown command"}
 
   def run(_session, :nick), do: {:error, {:ERR_NONICKNAMEGIVEN}}
   def run(_session, :user), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
