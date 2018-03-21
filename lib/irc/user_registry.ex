@@ -39,8 +39,8 @@ defmodule IRC.UserRegistry do
   end
 
   @spec change_nick(pid_or_atom(), String.t, String.t) :: create_response
-  def change_nick(registry \\ __MODULE__, old_nick, nick, user) do
-    GenServer.call(registry, {:change_nick, old_nick, nick, user})
+  def change_nick(registry \\ __MODULE__, old_nick, nick) do
+    GenServer.call(registry, {:change_nick, old_nick, nick})
   end
 
   @spec banned?(pid_or_atom(), nick::String.t) :: boolean
@@ -67,8 +67,8 @@ defmodule IRC.UserRegistry do
     {:reply, Map.fetch(nicknames, nick), state}
   end
 
-  def handle_call({:change_nick, old_nick, nick, user}, _from, state) do
-    nick(state, old_nick, nick, user)
+  def handle_call({:change_nick, old_nick, nick}, _from, state) do
+    nick(state, old_nick, nick)
   end
 
   def handle_call({:create, nick, user}, _from, state) do
@@ -89,7 +89,7 @@ defmodule IRC.UserRegistry do
     end
   end
 
-  defp nick(%UserRegistry{} = state, nick, user) do
+  defp nick(%UserRegistry{} = state, nick, user) when is_pid(user) do
     cond do
       _nick_exists?(state.nicknames, nick) -> nick_in_use_reply(state, nick)
       _banned?(state.banned_nicks, nick) -> nick_banned_reply(state, nick)
@@ -97,11 +97,11 @@ defmodule IRC.UserRegistry do
     end
   end
 
-  defp nick(%UserRegistry{} = state, old_nick, nick, user) do
+  defp nick(%UserRegistry{} = state, old_nick, nick) when is_binary(old_nick) and is_binary(nick) do
     cond do
       _nick_exists?(state.nicknames, nick) -> nick_in_use_reply(state, nick)
       _banned?(state.banned_nicks, nick) -> nick_banned_reply(state, nick)
-      true -> _change_nick(state, old_nick, nick, user)
+      true -> _change_nick(state, old_nick, nick)
     end
   end
 
@@ -110,7 +110,7 @@ defmodule IRC.UserRegistry do
     state |> _execute_nick(nick, user)
   end
 
-  defp _change_nick(%UserRegistry{} = state, old_nick, nick, user) do
+  defp _change_nick(%UserRegistry{} = state, old_nick, nick) do
     state.nicknames
     |> Map.fetch(old_nick)
     |> case do

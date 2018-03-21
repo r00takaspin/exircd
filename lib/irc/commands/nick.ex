@@ -32,7 +32,7 @@ defmodule IRC.Commands.Nick do
 
   defp change_nick(user_registry, old_nick, nick, user) do
     user_registry
-    |> UserRegistry.change_nick(old_nick, nick, user)
+    |> UserRegistry.change_nick(old_nick, nick)
     |> case do
          {:ok, _} -> :ok
          msg -> msg
