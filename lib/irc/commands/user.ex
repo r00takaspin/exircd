@@ -6,10 +6,6 @@ defmodule IRC.Commands.User do
   """
 
   def run(user, login, mode, realname) do
-    #TODO: добавить вывод реального IP
-    host = "127.0.0.1"
-    nick = User.nick(user)
-
     user
     |> User.user(login, mode, realname)
     |> case do

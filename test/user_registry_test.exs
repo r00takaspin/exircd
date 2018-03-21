@@ -27,19 +27,19 @@ defmodule UserRegistryTest do
     @old_nick "poopa"
     @new_nick "loopa"
 
-    test "user not found", %{registry: registry, user: user} do
-      subject = registry |> UserRegistry.change_nick(@old_nick, @new_nick, user)
+    test "user not found", %{registry: registry} do
+      subject = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
       assert  subject == {:error, :not_found}
     end
 
     test "change nick several times", %{registry: registry, user: user} do
       registry |> UserRegistry.create(@old_nick, user)
-      {:ok, _} = registry |> UserRegistry.change_nick(@old_nick, @new_nick, user)
+      {:ok, _} = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
 
       {:ok, loopa} = registry |> UserRegistry.lookup(@new_nick)
       assert @new_nick == loopa |> IRC.User.nick
 
-      {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick, user)
+      {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick)
     end
   end
 
