@@ -1,11 +1,17 @@
 defmodule UserTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias IRC.User
 
   setup do
-    {:ok, user} = User.start_link([])
+    {:ok, user} = IRC.Support.UserFactory.create_user()
     %{user: user}
+  end
+
+  setup_all do
+    {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
+    on_exit fn -> IRC.UserRegistry.reset_meta() end
+    :ok
   end
 
   describe "lock/2" do
