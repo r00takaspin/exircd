@@ -3,37 +3,49 @@ defmodule IRC.ServerTest do
 
   @port 6667
 
-  @nick "voldemar"
-  @login @nick
+  setup_all do
+    {:ok, _pid} = ExIRCd.start([], [])
+    :ok
+  end
+
   setup do
-    {:ok, pid} = ExIRCd.start([], [])
     socket = new_client()
-
-    on_exit fn -> :gen_tcp.close(socket); Process.exit(pid, :down) end
-
     %{socket: socket}
   end
+
+  @nick "voldemar"
+  @login @nick
 
   test "Basic registration scanario: nick -> user", %{socket: socket} do
     register(socket)
     assert_welcone(socket)
+
+    :gen_tcp.close(socket)
   end
 
   test "Basic registration scanario: user -> nick", %{socket: socket} do
-    :gen_tcp.send(socket, "USER #{@nick} * * :Voldemar Duletskiy\r\n")
-    :gen_tcp.send(socket, "NICK #{@login}\r\n")
+    :gen_tcp.send(socket, "USER voldemar * * :Voldemar Duletskiy\r\n")
+    :gen_tcp.send(socket, "NICK voldemar\r\n")
 
     assert_welcone(socket)
+
+    :gen_tcp.close(socket)
   end
 
-  test "nick already exists", %{socket: socket} do
+  test "nick already exists" do
+    socket = new_client()
     register(socket)
+
+    # TODO: remove sleep
+    :timer.sleep(50)
 
     socket1 = new_client()
 
     :gen_tcp.send(socket1, "NICK #{@nick}\r\n")
 
     read_assert(socket1, "433 <#{@nick}> :Nickname is already in use\r\n")
+
+    :gen_tcp.close(socket1)
   end
 
   def new_client() do
@@ -54,8 +66,9 @@ defmodule IRC.ServerTest do
   end
 
   def read_assert(socket, msg) do
-    {:ok, res} = :gen_tcp.recv(socket, 0)
-
-    assert res == msg
+    case :gen_tcp.recv(socket, 0) do
+      {:ok, res} -> assert res == msg
+      msg -> IO.inspect(msg)
+    end
   end
 end

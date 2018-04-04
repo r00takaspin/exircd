@@ -3,40 +3,16 @@ defmodule IRC.Commands.Nick do
     Исполнение команды nick
   """
 
-  alias IRC.{UserRegistry, Session, User}
+  alias IRC.UserRegistry
 
   @doc """
     Смена ника пользователя или регистрация пользователя
     с указанным никнеймом
   """
-  def run(nick, session, user_registry) do
-    nick
-    |> execute(session, user_registry)
-    |> format_output
-  end
-
-  defp execute(nick, session, user_registry) do
-    user = session |> Session.user
-
+  def run(user, nick) do
     user
-    |> User.nick
-    |> case do
-         nil ->
-           user_registry
-           |> UserRegistry.create(nick, user)
-         old_nick ->
-           user_registry
-           |> change_nick(old_nick, nick, user)
-       end
-  end
-
-  defp change_nick(user_registry, old_nick, nick, user) do
-    user_registry
-    |> UserRegistry.change_nick(old_nick, nick)
-    |> case do
-         {:ok, _} -> :ok
-         msg -> msg
-       end
+    |> UserRegistry.nick(nick)
+    |> format_output
   end
 
   defp format_output({:welcome, [login: login, nick: nick, host: host]}) do

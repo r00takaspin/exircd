@@ -7,7 +7,7 @@ defmodule IRC.Server do
 
   use GenServer
 
-  alias IRC.{ServerSupervisor, Reply, Command, SessionRegistry}
+  alias IRC.{ServerSupervisor, UserRegistry, Reply, Command}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -38,11 +38,11 @@ defmodule IRC.Server do
   end
 
   defp serve(socket) do
-    session = socket |> init_session
+    {:ok, user} = UserRegistry.find_or_create_by_socket(socket)
 
     with line <- read_line(socket),
          {:ok, command} <- Command.parse(line),
-         {:ok, reply} <- Command.run(session, command) do
+         {:ok, reply} <- Command.run(user, command) do
             reply
             |> Reply.reply()
             |> write_line(socket)
@@ -54,17 +54,6 @@ defmodule IRC.Server do
     serve(socket)
   end
 
-  defp init_session(socket) do
-    socket
-    |> SessionRegistry.lookup
-    |> case do
-         :error ->
-           SessionRegistry.create(socket)
-           init_session(socket)
-         {:ok, session} -> session
-       end
-  end
-
   defp read_line(socket) do
     :gen_tcp.recv(socket, 0)
     |> case do
@@ -73,7 +62,11 @@ defmodule IRC.Server do
         data
 
       {:error, :closed} ->
-        debug("Connection closed")
+        case UserRegistry.lookup(socket) do
+          {:ok, user} -> IRC.User.quit(user)
+          msg -> IO.inspect(msg)
+        end
+        Logger.debug("Connection closed")
         Process.exit(self(), :normal)
     end
   end

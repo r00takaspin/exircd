@@ -1,68 +1,66 @@
 defmodule IRC.Commands.NickTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
-  alias IRC.{UserRegistry, SessionRegistry, Commands.Nick}
+  alias IRC.{Commands.Nick, Support.UserFactory}
+
+  setup_all do
+    {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
+    :ok
+  end
+
+  setup do
+    on_exit fn -> IRC.UserRegistry.reset_meta() end
+  end
 
   describe "run/3" do
-    def subject(nick, session, user_registry) do
-      Nick.run(nick, session, user_registry)
+    def subject(user, nick) do
+      Nick.run(user, nick)
     end
 
-    @socket "123213213"
-
     setup do
-      {:ok, _} = SessionRegistry.start_link([name: SessionRegistry])
-      SessionRegistry.create(@socket)
-      {:ok, session} = SessionRegistry.lookup(@socket)
-      {:ok, registry} = UserRegistry.start_link([])
-      %{session: session, registry: registry}
+      {:ok, user} = UserFactory.create_user()
+
+      %{user: user}
     end
 
     @long_nick "very_long_nick_name_here"
-    test "long nickname: #{@long_nick}", context do
-      %{session: session, registry: registry} = context
-
+    test "long nickname: #{@long_nick}", %{user: user} do
       body = {:error, {:ERR_ERRONEUSNICKNAME, @long_nick}}
-      assert body == subject(@long_nick, session, registry)
+
+      assert body == subject(user, @long_nick)
     end
 
     @short_nick "aa"
-    test "short nickname: #{@short_nick}", context do
-      %{session: session, registry: registry} = context
+    test "short nickname: #{@short_nick}", %{user: user} do
       body = {:error, {:ERR_ERRONEUSNICKNAME, @short_nick}}
-      assert  body == subject(@short_nick, session, registry)
+      assert  body == subject(user, @short_nick)
     end
 
     @used_nickname "voldemar"
-    test "nickname in use: #{@used_nickname}", context do
-      %{session: session, registry: registry} = context
-      {:ok, user} = IRC.User.start_link([])
-
-      registry |> UserRegistry.create(@used_nickname, user)
+    test "nickname in use: #{@used_nickname}", %{user: user} do
+      {:ok, user2} = UserFactory.create_user()
+      IRC.UserRegistry.nick(user2, @used_nickname)
       response = {:error, {:ERR_NICKNAMEINUSE, @used_nickname}}
-      assert response == subject(@used_nickname, session, registry)
+      assert response == subject(user, @used_nickname)
     end
 
-    test "session has attached user", context do
-      %{session: session, registry: registry} = context
+    test "session has attached user", %{user: user} do
       poopa = "poopa"
       loopa = "loopa"
 
-      assert :ok == subject(loopa, session, registry)
-      assert :ok == subject(poopa, session, registry)
+      assert :ok == subject(user, poopa)
+      assert :ok == subject(user, loopa)
     end
 
-    test "register valid user", context do
-      %{session: session, registry: registry} = context
-      assert :ok == subject("valid_nick", session, registry)
+    test "register valid user", %{user: user} do
+      assert :ok == subject(user, "valid_nick")
     end
 
     @banned_nickname "loopa"
-    test "banned nickname: #{@banned_nickname}", context do
-      %{session: session, registry: registry} = context
-      registry |> UserRegistry.ban(@banned_nickname)
+    test "banned nickname: #{@banned_nickname}", %{user: user} do
+      IRC.UserRegistry.ban(@banned_nickname)
       response = {:error, {:ERR_UNAVAILRESOURCE, @banned_nickname}}
-      assert response == subject(@banned_nickname, session, registry)
+      assert response == subject(user, @banned_nickname)
     end
   end
 end

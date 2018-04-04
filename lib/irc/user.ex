@@ -3,7 +3,14 @@ defmodule IRC.User do
     Процесс хранящий все данные пользователя
   """
 
-  defstruct nick: nil, locked: false, realname: "", mode: "", registered: false, login: "", host: "127.0.0.1"
+  defstruct nick: nil,
+            locked: false,
+            realname: "",
+            mode: "",
+            registered: false,
+            login: "",
+            host: "127.0.0.1",
+            socket: nil
 
   @type t :: %IRC.User{nick: String.t, locked: boolean}
 
@@ -14,20 +21,28 @@ defmodule IRC.User do
   @doc """
     Запуск процесса пользователя
   """
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link(socket) do
+    name = via_tuple(socket)
+    GenServer.start_link(__MODULE__, socket, name: name)
   end
 
-  def init(:ok) do
-    {:ok, %User{}}
+  defp via_tuple(socket) do
+    {:via, Registry, {UserRegistry, socket}}
   end
+
+  def init(socket) do
+    {:ok, %User{socket: socket}}
+  end
+
+  @doc """
+  Получаем параметр пользователя по его PID
+  """
+  def get_param(user, param), do: GenServer.call(user, {:get_param, param})
 
   @doc """
     Задается никнейм пользователя
   """
-  @type nick_invalid :: {:error, {:nickinvalid, String.t}}
-  @type nick_response :: {:ok, String.t} | nick_invalid
-  @spec nick(user::pid(), nick::String.t) :: nick_response
+  @spec nick(user::pid(), nick::String.t) :: term()
   def nick(user, nick) do
     nick
     |> nick_valid?
@@ -35,6 +50,10 @@ defmodule IRC.User do
         true -> GenServer.call(user, {:nick, nick})
         false -> {:error, {:nickinvalid, nick}}
        end
+  end
+
+  def quit(user) do
+    GenServer.stop(user)
   end
 
   @doc """
@@ -55,6 +74,8 @@ defmodule IRC.User do
   @spec lock(pid()) :: :ok
   def lock(user), do: GenServer.cast(user, :lock)
 
+  def handle_call({:get_param, param}, _, user), do: {:reply, Map.get(user, param), user}
+
   def handle_call(:get_nick, _, %User{nick: nick} = user), do: {:reply, nick, user}
 
   #NICK
@@ -63,13 +84,18 @@ defmodule IRC.User do
     {:reply, {:error, :locked}, user}
   end
   def handle_call({:nick, nick}, _from, %User{registered: true, nick: nil} = user) do
+    register_nick(nick)
     user = %{user | nick: nick}
     {:reply, welcome_reply(user), user}
   end
-  def handle_call({:nick, nick}, _from, %User{registered: false} = user) do
+  def handle_call({:nick, nick}, _from, %User{registered: false, nick: old_nick} = user) do
+    register_nick(nick)
+    unregister_nick(old_nick)
     {:reply, {:ok, nick}, %{user | nick: nick}}
   end
-  def handle_call({:nick, nick}, _from, user) do
+  def handle_call({:nick, nick}, _from, %User{nick: old_nick} = user) do
+    register_nick(nick)
+    unregister_nick(old_nick)
     {:reply, {:ok, nick}, %{user | nick: nick}}
   end
 
@@ -103,5 +129,13 @@ defmodule IRC.User do
 
   defp welcome_reply(%User{login: login, nick: nick, host: host}) do
     {:welcome, login: login, nick: nick, host: host}
+  end
+
+  defp register_nick(nick) do
+    Registry.register(UserRegistry, nick, self())
+  end
+
+  defp unregister_nick(nick) do
+    Registry.unregister(UserRegistry, nick)
   end
 end

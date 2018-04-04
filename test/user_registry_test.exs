@@ -1,70 +1,105 @@
 defmodule UserRegistryTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
-  alias IRC.{User, UserRegistry}
+  alias IRC.{User, Support.UserFactory}
 
-  setup do
-    {:ok, registry} = UserRegistry.start_link([])
-    {:ok, user} = User.start_link([])
-    %{registry: registry, user: user}
+  setup_all do
+    {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
+    :ok
   end
 
-  describe "lookup/1" do
-    @nick "test"
-    test "return error if empty repository", %{registry: registry} do
-      assert registry |> UserRegistry.lookup(@nick) == :error
+  setup do
+    on_exit fn -> IRC.UserRegistry.reset_meta() end
+  end
+
+
+  describe "find_or_create_by_socket/2" do
+    test "finds user by socket" do
+      {:ok, new_user} = UserFactory.create_user()
+
+      socket = User.get_param(new_user, :socket)
+
+      {:ok, found_user} = IRC.UserRegistry.find_or_create_by_socket(socket)
+
+      assert new_user == found_user
     end
 
-    test "find existing nickname", %{registry: registry, user: user} do
-      registry |> UserRegistry.create(@nick, user)
-      {:ok, pid} = registry |> UserRegistry.lookup(@nick)
+    test "creates user by new socket" do
+      {:ok, socket} = :gen_tcp.listen(0, [:binary, packet: :line, active: false, reuseaddr: true])
+
+      {:ok, pid} = IRC.UserRegistry.find_or_create_by_socket(socket)
+
       assert is_pid(pid)
     end
   end
 
+  describe "lookup/1" do
+    @nick "test"
+    test "return error if empty repository" do
+      refute IRC.UserRegistry.lookup(@nick)
+    end
+
+    test "find existing nickname" do
+      {:ok, user} = UserFactory.create_user()
+      User.nick(user, @nick)
+      {:ok, pid} = IRC.UserRegistry.lookup(@nick)
+
+      assert User.get_param(pid, :nick) == @nick
+    end
+  end
+
   describe "change_nick/3" do
+    setup do
+      {:ok, user} = UserFactory.create_user()
+      %{user: user}
+    end
 
     @old_nick "poopa"
     @new_nick "loopa"
 
-    test "user not found", %{registry: registry} do
-      subject = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
-      assert  subject == {:error, :not_found}
+    test "set nickname", %{user: user} do
+      subject = IRC.UserRegistry.nick(user, @new_nick)
+      assert  {:ok, _pid} = subject
     end
 
-    test "change nick several times", %{registry: registry, user: user} do
-      registry |> UserRegistry.create(@old_nick, user)
-      {:ok, _} = registry |> UserRegistry.change_nick(@old_nick, @new_nick)
+    test "change nick several times", %{user: user} do
+      IRC.UserRegistry.nick(user, @old_nick)
+      {:ok, _} = IRC.UserRegistry.nick(user, @new_nick)
 
-      {:ok, loopa} = registry |> UserRegistry.lookup(@new_nick)
+      {:ok, loopa} = IRC.UserRegistry.lookup(@new_nick)
       assert @new_nick == loopa |> IRC.User.nick
 
-      {:ok, _} = registry |> UserRegistry.change_nick(@new_nick, @old_nick)
+      {:ok, _} = IRC.UserRegistry.nick(user, @old_nick)
     end
   end
 
   describe "ban/2" do
+    setup do
+      {:ok, user} = UserFactory.create_user()
+      %{user: user}
+    end
+
     @poopa "poopa"
-    test "ban existing user: #{@poopa}", %{registry: registry, user: user} do
-      registry |> UserRegistry.create(@poopa, user)
-      assert :ok == registry |> UserRegistry.ban(@poopa)
+    test "ban existing user: #{@poopa}", %{user: user} do
+      IRC.UserRegistry.nick(user, @poopa)
+      assert :ok == IRC.UserRegistry.ban(@poopa)
     end
 
     @loopa "loopa"
-    test "ban not existing user: #{@loopa}", %{registry: registry} do
-      assert :ok == registry |> UserRegistry.ban(@loopa)
+    test "ban not existing user: #{@loopa}" do
+      assert :ok == IRC.UserRegistry.ban(@loopa)
     end
   end
 
   describe "banned?/2" do
     @poopa "poopa"
-    test "false if user: #{@poopa} doesn't exists", %{registry: registry} do
-      refute registry |> UserRegistry.banned?(@poopa)
+    test "false if user: #{@poopa} doesn't exists" do
+      refute IRC.UserRegistry.banned?(@poopa)
     end
 
-    test "true if user: #{@poopa} is already banned", %{registry: registry} do
-      registry |> UserRegistry.ban(@poopa)
-      assert registry |> UserRegistry.banned?(@poopa)
+    test "true if user: #{@poopa} is already banned" do
+      IRC.UserRegistry.ban(@poopa)
+      assert IRC.UserRegistry.banned?(@poopa)
     end
   end
 end

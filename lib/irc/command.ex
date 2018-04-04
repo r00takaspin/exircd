@@ -3,7 +3,6 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.UserRegistry
   alias IRC.Commands.{Nick, User}
 
   @doc ~S"""
@@ -49,16 +48,14 @@ defmodule IRC.Command do
   end
   def parse(_), do: {:error, "Unknown command"}
 
-  def run(_session, :nick), do: {:error, {:ERR_NONICKNAMEGIVEN}}
-  def run(_session, :user), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
+  def run(_user, :nick), do: {:error, {:ERR_NONICKNAMEGIVEN}}
+  def run(_user, :user), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
 
   @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
-  def run(session, {:nick, nick}) do
-    Nick.run(nick, session, UserRegistry)
+  def run(user, {:nick, nick}) do
+    Nick.run(user, nick)
   end
-  def run(session, {:user, login, mode, realname}) do
-    session
-    |> IRC.Session.user
-    |> User.run(login, mode, realname)
+  def run(user, {:user, login, mode, realname}) do
+    User.run(user, login, mode, realname)
   end
 end
