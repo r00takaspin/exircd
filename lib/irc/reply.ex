@@ -12,18 +12,18 @@ defmodule IRC.Reply do
   def response_codes do
     %{
       # WELCOME REPLYES:
-      RPL_WELCOME:          001,
-      RPL_YOURHOST:         002,
-      RPL_CREATED:          003,
-      RPL_MYINFO:           004,
+      RPL_WELCOME:          "001",
+      RPL_YOURHOST:         "002",
+      RPL_CREATED:          "003",
+      RPL_MYINFO:           "004",
 
-      ERR_NICKNAMEINUSE:    433,
-      ERR_ERRONEUSNICKNAME: 432,
-      ERR_NONICKNAMEGIVEN:  431,
-      ERR_UNAVAILRESOURCE:  437,
+      ERR_NICKNAMEINUSE:    "433",
+      ERR_ERRONEUSNICKNAME: "432",
+      ERR_NONICKNAMEGIVEN:  "431",
+      ERR_UNAVAILRESOURCE:  "437",
 
-      ERR_NEEDMOREPARAMS:   461,
-      ERR_ALREADYREGISTRED: 462
+      ERR_NEEDMOREPARAMS:   "461",
+      ERR_ALREADYREGISTRED: "462"
     }
   end
 
@@ -34,60 +34,50 @@ defmodule IRC.Reply do
   """
 
   def error({:ERR_NEEDMOREPARAMS, command}) do
-    code = response_codes()[:ERR_NEEDMOREPARAMS]
-    "#{code} <#{command}> :Not enough parameters"
-    |> format
+    format :ERR_NEEDMOREPARAMS, "<#{command}> :Not enough parameters"
   end
   def error({:ERR_UNAVAILRESOURCE, nick}) do
-    code = response_codes()[:ERR_NICKNAMEINUSE]
-    "#{code} <#{nick}> :Nick/channel is temporarily unavailable"
-    |> format
+    format :ERR_UNAVAILRESOURCE, "<#{nick}> :Nick/channel is temporarily unavailable"
   end
   def error({:ERR_NONICKNAMEGIVEN}) do
-    "#{response_codes()[:ERR_NONICKNAMEGIVEN]} :No nickname given"
-    |> format
+    format :ERR_NONICKNAMEGIVEN, ":No nickname given"
   end
   def error({:ERR_ERRONEUSNICKNAME, nick}) do
-    "#{response_codes()[:ERR_ERRONEUSNICKNAME]} <#{nick}> :Erroneous nickname"
-    |> format
+    format :ERR_ERRONEUSNICKNAME, "<#{nick}> :Erroneous nickname"
   end
   def error({:ERR_NICKNAMEINUSE, nick}) do
-    code = response_codes()[:ERR_NICKNAMEINUSE]
-    "#{code} <#{nick}> :Nickname is already in use"
-    |> format
+    format :ERR_NICKNAMEINUSE, "<#{nick}> :Nickname is already in use"
   end
   def error({:ERR_ALREADYREGISTRED}) do
-    code = response_codes()[:ERR_ALREADYREGISTRED]
-    "#{code} :Unauthorized command (already registered)"
-    |> format
+    format :ERR_ALREADYREGISTRED, ":Unauthorized command (already registered)"
   end
-  def error(_msg), do: "Unknown error" |> format
+  def error(_msg), do: "Unknown error\r\n"
 
   @doc """
     Вывод успешно завершенных комманд
   """
-  def reply do "" end
+  def reply, do: nil
   def reply(list) when is_list(list) do
     list |> List.foldl("",fn(r, str) -> str <> reply(r) end)
   end
 
   def reply({:RPL_WELCOME, nick, login, host}) do
-    "#{response_codes()[:RPL_WELCOME]} Welcome to the Internet Relay Network #{nick}!#{login}@#{host}>"
-    |> format
+    format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}>"
   end
   def reply(:RPL_YOURHOST) do
-    "#{response_codes()[:RPL_YOURHOST]} Your host is #{@servername}, running version #{@version}"
-    |> format
+    format :RPL_YOURHOST, "Your host is #{@servername}, running version #{@version}"
   end
   def reply(:RPL_CREATED) do
-    "#{response_codes()[:RPL_CREATED]} This server was created #{@start_date}"
-    |> format
+    format :RPL_CREATED, "This server was created #{@start_date}"
   end
   def reply(:RPL_MYINFO) do
-    "#{response_codes()[:RPL_MYINFO]} #{@servername} #{@version} #{@user_modes} #{@chanel_modes}"
-    |> format
+    format :RPL_MYINFO, "#{@servername} #{@version} #{@user_modes} #{@chanel_modes}"
   end
   def reply(_params), do: reply()
 
-  defp format(str), do: "#{str}\r\n"
+  defp reply_id(code), do: response_codes()[code]
+
+  defp format(code, str) do
+    "#{reply_id(code)} #{str}\r\n"
+  end
 end

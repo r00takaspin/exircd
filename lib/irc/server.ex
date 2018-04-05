@@ -71,13 +71,13 @@ defmodule IRC.Server do
     end
   end
 
+  defp write_line(nil, socket) do
+    debug(socket, "Empty response.")
+  end
+
   defp write_line(line, socket) do
     debug(socket, "Response: #{line}")
     :gen_tcp.send(socket, line)
-  end
-
-  defp debug(line) do
-    debug(line)
   end
 
   defp debug(socket, line) do
