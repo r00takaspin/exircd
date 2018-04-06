@@ -17,6 +17,8 @@ defmodule IRC.Reply do
       RPL_CREATED:          "003",
       RPL_MYINFO:           "004",
 
+      ERR_NOSUCHNICK:       "401",
+      ERR_NORECIPIENT:      "411",
       ERR_NICKNAMEINUSE:    "433",
       ERR_ERRONEUSNICKNAME: "432",
       ERR_NONICKNAMEGIVEN:  "431",
@@ -56,7 +58,13 @@ defmodule IRC.Reply do
   def error({:ERR_NOTREGISTERED}) do
     format :ERR_NOTREGISTERED, ":You have not registered"
   end
-  def error(_msg), do: "Unknown error\r\n"
+  def error({:ERR_NOSUCHNICK, nick}) do
+    format :ERR_NOSUCHNICK, "<#{nick}> :No such nick/channel"
+  end
+  def error({:ERR_NORECIPIENT, command}) do
+    format :ERR_NORECIPIENT, ":No recipient given (<#{command}>)"
+  end
+  def error(msg), do: "Unknown error: #{msg}\r\n"
 
   @doc """
     Вывод успешно завершенных комманд

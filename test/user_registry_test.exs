@@ -59,7 +59,7 @@ defmodule UserRegistryTest do
     @new_nick "loopa"
 
     test "set nickname", %{user: user} do
-      assert {:ok, pid} = IRC.UserRegistry.nick(user, @new_nick)
+      assert {:ok, _pid} = IRC.UserRegistry.nick(user, @new_nick)
     end
 
     test "change nick several times", %{user: user} do

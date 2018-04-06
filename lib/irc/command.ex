@@ -51,9 +51,11 @@ defmodule IRC.Command do
     |> Enum.map(&String.trim/1)
     |> case do
         [nick, message] -> {:ok, {:privmsg, nick, message}}
-        [nick] -> {:error, {:ERR_NOTEXTTOSEND}}
+        [_nick] -> {:error, {:ERR_NOTEXTTOSEND}}
        end
   end
+
+  def parse(command), do: {:error, "Unknown command: #{command}"}
 
   defp split_args(line) when is_binary(line) do
     line
@@ -64,11 +66,9 @@ defmodule IRC.Command do
          ["USER", login, mode, "*", first_name, last_name] ->
            {:ok, {:user, login, mode, "#{String.replace(first_name, ":", "")} #{last_name}"}}
          ["USER" | _tail] -> {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
-         msg -> IO.inspect(msg); {:error, "Unknown command"}
+         _msg -> {:error, "Unknown command: #{line}"}
        end
   end
-  def parse(_), do: {:error, "Unknown command"}
-
 
   @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
   def run(user, {:nick, nick}) do

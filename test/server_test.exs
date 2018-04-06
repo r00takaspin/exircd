@@ -73,14 +73,23 @@ defmodule IRC.ServerTest do
       msg = "Hello morty"
       Client.write(morty, "PRIVMSG rick :#{msg}")
 
-      assert_receive {:tcp, rick, ":rick!rick@127.0.0.1 PRIVMSG :Hello morty"}
+      assert_receive {:tcp, ^rick, ":rick!rick@127.0.0.1 PRIVMSG :Hello morty\r\n"}
     end
 
-    test "Allow messaging for registered users" do
+    test "Allow messaging only for registered users" do
       client = Client.new(@port)
-      Client.write(client, "PRIVMSG somebody :Some text")
 
-      assert_receive {:tcp, client, "451 :You have not registered\r\n"}
+      Client.write(client, "PRIVMSG")
+      assert_receive {:tcp, ^client, "451 :You have not registered\r\n"}
     end
+
+    test "Error if there is no such user", %{rick: rick} do
+      rick
+      |> Client.write("PRIVMSG somebody :Hey!")
+
+      assert_receive {:tcp, ^rick, "401 <somebody> :No such nick/channel\r\n"}
+    end
+
+
   end
 end
