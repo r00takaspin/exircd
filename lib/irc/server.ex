@@ -64,7 +64,7 @@ defmodule IRC.Server do
       {:error, :closed} ->
         case UserRegistry.lookup(socket) do
           {:ok, user} -> IRC.User.quit(user)
-          msg -> IO.inspect(msg)
+          _msg -> debug(socket, "unregistered user")
         end
         Logger.debug("Connection closed")
         Process.exit(self(), :normal)
