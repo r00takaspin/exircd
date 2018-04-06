@@ -73,7 +73,14 @@ telnet localhost 6667
 ##### Команды отправки сообщений:
 
 - [ ] PRIVMSG
-- [ ] NOTICE
+	- [ ] ERR_NORECIPIENT
+	- [ ] ERR_CANNOTSENDTOCHAN
+	- [ ] ERR_WILDTOPLEVEL
+  - [ ] ERR_NOSUCHNICK
+  - [ ] RPL_AWAY
+  - [ ] ERR_NOTEXTTOSEND
+  - [ ] ERR_NOTOPLEVEL
+	- [ ] NOTICE
 
 ##### Пользовательские запросы:
 
