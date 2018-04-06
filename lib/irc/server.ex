@@ -59,7 +59,7 @@ defmodule IRC.Server do
     |> case do
       {:ok, data} ->
         debug(socket, "Request: #{data}")
-        data
+        String.trim(data)
 
       {:error, :closed} ->
         case UserRegistry.lookup(socket) do

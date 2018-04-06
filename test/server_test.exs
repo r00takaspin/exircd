@@ -16,11 +16,6 @@ defmodule IRC.ServerTest do
     "004 Ironclad 0.0.1 alpha aiwroOs asdasdasdasd"
   ]
 
-  def new_client() do
-    {:ok, socket} = :gen_tcp.connect('localhost', @port, [:binary, packet: :line])
-    socket
-  end
-
   def check_welcome(socket) do
     Enum.each(@welcome_messages, fn (msg) ->
       msg = "#{msg}\r\n"
@@ -35,7 +30,7 @@ defmodule IRC.ServerTest do
 
   describe "Registration" do
     setup do
-      socket = new_client()
+      socket = Client.new(@port)
       %{socket: socket}
     end
 
@@ -59,9 +54,26 @@ defmodule IRC.ServerTest do
       |> Client.nick(@nick)
       |> check_welcome
 
-      somebody = new_client() |> Client.nick(@nick)
+      somebody = Client.new(@port) |> Client.nick(@nick)
 
       assert_receive {:tcp, ^somebody, "433 " <> _}
+    end
+  end
+
+  describe "Messaging between users" do
+    setup do
+      %{
+        rick: Client.new(@port) |> Client.register("rick",  "Rich", "Sanchez"),
+        morty: Client.new(@port) |> Client.register("morty", "Morty", "Smith")
+      }
+    end
+
+    @tag :skip
+    test "One user messages to another", %{rick: rick, morty: morty} do
+      msg = "Hello morty"
+      Client.write(morty, "PRIVMSG rick :#{msg}")
+
+      assert_receive {:tcp, rick, ":rick!rick@127.0.0.1 PRIVMSG :Hello morty"}
     end
   end
 end

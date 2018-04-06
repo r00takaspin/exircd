@@ -45,12 +45,6 @@ defmodule IRC.CommandTest do
       assert response == subject(user, {:nick, @used_nickname})
     end
 
-    test "no enough params", %{user: user} do
-      response = {:error, {:ERR_NONICKNAMEGIVEN}}
-
-      assert response == Command.run(user, :nick)
-    end
-
     @banned_nick "haxor"
     test "username is banned", %{user: user} do
       IRC.UserRegistry.ban(@banned_nick)
