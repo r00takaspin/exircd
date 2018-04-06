@@ -83,6 +83,13 @@ defmodule IRC.ServerTest do
       assert_receive {:tcp, ^client, "451 :You have not registered\r\n"}
     end
 
+    test "Empty text", %{rick: rick} do
+      rick
+      |> Client.write("PRIVMSG asdasdasdas")
+
+      assert_receive {:tcp, ^rick, "412 :No text to send\r\n"}
+    end
+
     test "Error if there is no such user", %{rick: rick} do
       rick
       |> Client.write("PRIVMSG somebody :Hey!")

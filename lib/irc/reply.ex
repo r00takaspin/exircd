@@ -17,8 +17,11 @@ defmodule IRC.Reply do
       RPL_CREATED:          "003",
       RPL_MYINFO:           "004",
 
+      # PRIVMSG
       ERR_NOSUCHNICK:       "401",
       ERR_NORECIPIENT:      "411",
+      ERR_NOTEXTTOSEND:     "412",
+
       ERR_NICKNAMEINUSE:    "433",
       ERR_ERRONEUSNICKNAME: "432",
       ERR_NONICKNAMEGIVEN:  "431",
@@ -64,6 +67,10 @@ defmodule IRC.Reply do
   def error({:ERR_NORECIPIENT, command}) do
     format :ERR_NORECIPIENT, ":No recipient given (<#{command}>)"
   end
+  def error({:ERR_NOTEXTTOSEND}) do
+    format :ERR_NOTEXTTOSEND, ":No text to send"
+  end
+
   def error(msg), do: "Unknown error: #{msg}\r\n"
 
   @doc """

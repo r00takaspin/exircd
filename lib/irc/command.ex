@@ -16,7 +16,7 @@ defmodule IRC.Command do
     {:ok, {:nick, "john"}}
 
     iex> IRC.Command.parse("UNKNOWN asdasdad")
-    {:error, "Unknown command"}
+    {:error, "Unknown command: UNKNOWN asdasdad"}
 
     iex> IRC.Command.parse("NICK")
     {:error, {:ERR_NONICKNAMEGIVEN}}
@@ -27,7 +27,7 @@ defmodule IRC.Command do
     {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
 
     iex> IRC.Command.parse(true)
-    {:error, "Unknown command"}
+    {:error, "Unknown command: true"}
 
     iex> IRC.Command.parse("PRIVMSG rick :Hello Morty")
     {:ok, {:privmsg, "rick", "Hello Morty"}}
