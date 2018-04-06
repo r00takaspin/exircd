@@ -75,5 +75,12 @@ defmodule IRC.ServerTest do
 
       assert_receive {:tcp, rick, ":rick!rick@127.0.0.1 PRIVMSG :Hello morty"}
     end
+
+    test "Allow messaging for registered users" do
+      client = Client.new(@port)
+      Client.write(client, "PRIVMSG somebody :Some text")
+
+      assert_receive {:tcp, client, "451 :You have not registered\r\n"}
+    end
   end
 end

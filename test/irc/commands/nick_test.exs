@@ -37,9 +37,8 @@ defmodule IRC.Commands.NickTest do
     end
 
     @used_nickname "voldemar"
-    test "nickname in use: #{@used_nickname}", %{user: user} do
-      {:ok, user2} = UserFactory.create_user()
-      IRC.UserRegistry.nick(user2, @used_nickname)
+    test "nickname in use: #{@used_nickname}" do
+      user = UserFactory.registered_user(@used_nickname)
       response = {:error, {:ERR_NICKNAMEINUSE, @used_nickname}}
       assert response == subject(user, @used_nickname)
     end

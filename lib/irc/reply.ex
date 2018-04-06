@@ -22,6 +22,8 @@ defmodule IRC.Reply do
       ERR_NONICKNAMEGIVEN:  "431",
       ERR_UNAVAILRESOURCE:  "437",
 
+      ERR_NOTREGISTERED:    "451",
+
       ERR_NEEDMOREPARAMS:   "461",
       ERR_ALREADYREGISTRED: "462"
     }
@@ -50,6 +52,9 @@ defmodule IRC.Reply do
   end
   def error({:ERR_ALREADYREGISTRED}) do
     format :ERR_ALREADYREGISTRED, ":Unauthorized command (already registered)"
+  end
+  def error({:ERR_NOTREGISTERED}) do
+    format :ERR_NOTREGISTERED, ":You have not registered"
   end
   def error(_msg), do: "Unknown error\r\n"
 

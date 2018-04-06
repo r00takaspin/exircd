@@ -5,14 +5,12 @@ defmodule IRC.User do
 
   defstruct nick: nil,
             locked: false,
-            realname: "",
+            login: nil,
+            realname: nil,
             mode: "",
-            registered: false,
-            login: "",
             host: "127.0.0.1",
-            socket: nil
-
-  @type t :: %IRC.User{nick: String.t, locked: boolean}
+            socket: nil,
+            registered?: false
 
   use GenServer
 
@@ -42,26 +40,30 @@ defmodule IRC.User do
   @doc """
     Задается никнейм пользователя
   """
-  @spec nick(user::pid(), nick::String.t) :: term()
+  @spec nick(user :: pid(), nick :: String.t()) :: term()
   def nick(user, nick) do
     nick
     |> nick_valid?
     |> case do
-        true -> GenServer.call(user, {:nick, nick})
-        false -> {:error, {:nickinvalid, nick}}
-       end
+      true -> GenServer.call(user, {:nick, nick})
+      false -> {:error, {:nickinvalid, nick}}
+    end
   end
 
-  def quit(user) do
-    GenServer.stop(user)
+  @doc """
+    Проверка регистрации пользователя
+  """
+  @spec registered?(user :: pid()) :: boolean
+  def registered?(user) do
+    User.get_param(user, :registered?)
   end
 
   @doc """
     Возвращает никнейм пользователя
   """
-  @spec nick(pid()) :: {:ok, String.t}
+  @spec nick(pid()) :: {:ok, String.t()}
   def nick(user) do
-    GenServer.call(user, :get_nick)
+    get_param(user, :nick)
   end
 
   def user(user, login, mode, realname) do
@@ -74,51 +76,39 @@ defmodule IRC.User do
   @spec lock(pid()) :: :ok
   def lock(user), do: GenServer.cast(user, :lock)
 
+  def quit(user) do
+    GenServer.stop(user)
+  end
+
   def handle_call({:get_param, param}, _, user), do: {:reply, Map.get(user, param), user}
 
-  def handle_call(:get_nick, _, %User{nick: nick} = user), do: {:reply, nick, user}
-
-  #NICK
+  # NICK
 
   def handle_call({:nick, _}, _, %User{locked: true} = user) do
     {:reply, {:error, :locked}, user}
   end
-  def handle_call({:nick, nick}, _from, %User{registered: true, nick: nil} = user) do
-    register_nick(nick)
-    user = %{user | nick: nick}
-    {:reply, welcome_reply(user), user}
-  end
-  def handle_call({:nick, nick}, _from, %User{registered: false, nick: old_nick} = user) do
-    register_nick(nick)
-    unregister_nick(old_nick)
-    {:reply, {:ok, nick}, %{user | nick: nick}}
-  end
-  def handle_call({:nick, nick}, _from, %User{nick: old_nick} = user) do
-    register_nick(nick)
-    unregister_nick(old_nick)
-    {:reply, {:ok, nick}, %{user | nick: nick}}
+
+  def handle_call({:nick, nick}, _from, user) do
+    cond do
+      already_registered?(user) -> change_nick(user, nick)
+      can_register?(user, :nick) -> register(user, nick)
+      true -> set_nick(user, nick)
+    end
   end
 
-  #USER
+  # USER
 
-  def handle_call({:user, _, _, _}, _from, %User{registered: true} = user) do
-    {:reply, {:error, :already_registered}, user}
-  end
+  def handle_call({:user, _, _, _}, _from, %User{registered?: true} = user), do: {:reply, {:error, :already_registered}, user}
 
-  def handle_call({:user, login, mode, realname}, _from, %User{nick: nil} = user) do
-    {
-      :reply,
-      :ok,
-      %{user | login: login, mode: mode, realname: realname, registered: true}
-    }
-  end
-  def handle_call({:user, login, mode, realname}, _from, user) do
-    user = %{user | login: login, mode: mode, realname: realname, registered: true}
-    {
-      :reply,
-      welcome_reply(user),
-      user
-    }
+  def handle_call({:user, login, mode, realname}, _from, %User{nick: nick} = user) do
+    user = %{user | login: login, mode: mode, realname: realname}
+    if can_register?(user, :user) do
+      user = %{user | registered?: true}
+      register_nick(nick)
+      {:reply, welcome_reply(user), user }
+    else
+      {:reply, :ok, user}
+    end
   end
 
   def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}
@@ -131,10 +121,35 @@ defmodule IRC.User do
     {:welcome, login: login, nick: nick, host: host}
   end
 
+  defp already_registered?(%User{registered?: value}), do: value
+
+  defp change_nick(%User{nick: old_nick} = user, nick) do
+    update_registry(old_nick, nick)
+    {:reply, {:ok, nick}, %{user | nick: nick}}
+  end
+
+  defp can_register?(%User{login: login}, :nick), do: login != nil
+  defp can_register?(%User{nick: nick}, :user), do: nick != nil
+  defp register(%User{nick: old_nick} = user, nick) do
+    user = %{user | registered?: true, nick: nick}
+    update_registry(old_nick, nick)
+    {:reply, welcome_reply(user), user}
+  end
+
+  defp set_nick(user, nick) do
+    {:reply, {:ok, nick}, %{user | nick: nick}}
+  end
+
+  defp update_registry(from, to) do
+    register_nick(to)
+    unregister_nick(from)
+  end
+
   defp register_nick(nick) do
     Registry.register(UserRegistry, nick, self())
   end
 
+  defp unregister_nick(nil), do: nil
   defp unregister_nick(nick) do
     Registry.unregister(UserRegistry, nick)
   end

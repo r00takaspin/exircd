@@ -3,7 +3,7 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.Commands.{Nick, User}
+  alias IRC.Commands.{Nick, User, Privmsg}
 
   @doc ~S"""
     iex> IRC.Command.parse("NICK john")
@@ -52,7 +52,6 @@ defmodule IRC.Command do
     |> case do
         [nick, message] -> {:ok, {:privmsg, nick, message}}
         [nick] -> {:error, {:ERR_NOTEXTTOSEND}}
-
        end
   end
 
@@ -78,7 +77,7 @@ defmodule IRC.Command do
   def run(user, {:user, login, mode, realname}) do
     User.run(user, login, mode, realname)
   end
-  def run(user, {:privmsg, nick, msg}) do
-    :ok
+  def run(user, {:privmsg, target, msg}) do
+    Privmsg.run(user, target, msg)
   end
 end
