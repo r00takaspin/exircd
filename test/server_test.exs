@@ -3,7 +3,7 @@ defmodule IRC.ServerTest do
 
   alias IRC.Client
 
-  @port 6667
+  @port 7777
   @nick "voldemar"
   @login @nick
   @first_name "Voldemar"
@@ -24,7 +24,7 @@ defmodule IRC.ServerTest do
   end
 
   setup_all do
-    {:ok, _pid} = ExIRCd.start([], [])
+    {:ok, _pid} = ExIRCd.start([], [port: @port])
     :ok
   end
 
