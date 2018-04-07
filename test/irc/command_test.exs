@@ -2,7 +2,7 @@ defmodule IRC.CommandTest do
   use ExUnit.Case
   doctest IRC.Command
 
-  alias IRC.{Command, Support.UserFactory}
+  alias IRC.{Command, Support.Factory}
 
   setup_all do
     {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
@@ -19,7 +19,7 @@ defmodule IRC.CommandTest do
     end
 
     setup do
-      {:ok, user} = UserFactory.create_user()
+      {:ok, user} = Factory.user()
       %{user: user}
     end
 
@@ -39,7 +39,7 @@ defmodule IRC.CommandTest do
     @used_nickname "voldemar"
     @user_nick_body {:ERR_NICKNAMEINUSE, @used_nickname}
     test "nickname in use" do
-      user = UserFactory.registered_user(@used_nickname)
+      user = Factory.user(:registered, @used_nickname)
 
       response = {:error, @user_nick_body}
       assert response == subject(user, {:nick, @used_nickname})

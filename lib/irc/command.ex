@@ -70,7 +70,7 @@ defmodule IRC.Command do
        end
   end
 
-  @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
+  @spec run(pid(), {:nick, String.t}) :: :ok | {:error, term}
   def run(user, {:nick, nick}) do
     Nick.run(user, nick)
   end

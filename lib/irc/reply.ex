@@ -80,7 +80,9 @@ defmodule IRC.Reply do
   def reply(list) when is_list(list) do
     list |> List.foldl("",fn(r, str) -> str <> reply(r) end)
   end
-
+  def reply({:PRIVMSG, from, msg}) do
+    format ":#{from} PRIVMSG :#{msg}"
+  end
   def reply({:RPL_WELCOME, nick, login, host}) do
     format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}>"
   end
@@ -96,6 +98,8 @@ defmodule IRC.Reply do
   def reply(_params), do: reply()
 
   defp reply_id(code), do: response_codes()[code]
+
+  defp format(str), do: "#{str}\r\n"
 
   defp format(code, str) do
     "#{reply_id(code)} #{str}\r\n"

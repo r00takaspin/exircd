@@ -3,33 +3,35 @@ defmodule IRC.User do
     Процесс хранящий все данные пользователя
   """
 
+  use GenServer
+
+  alias IRC.{User, Reply}
+
+  @server_name Application.get_env(:exircd, :servername)
+
   defstruct nick: nil,
             locked: false,
             login: nil,
             realname: nil,
             mode: "",
-            host: "127.0.0.1",
+            host: nil,
             socket: nil,
             registered?: false
-
-  use GenServer
-
-  alias IRC.User
 
   @doc """
     Запуск процесса пользователя
   """
-  def start_link(socket) do
+  def start_link(socket, host) do
     name = via_tuple(socket)
-    GenServer.start_link(__MODULE__, socket, name: name)
+    GenServer.start_link(__MODULE__, [socket, host], name: name)
   end
 
   defp via_tuple(socket) do
     {:via, Registry, {UserRegistry, socket}}
   end
 
-  def init(socket) do
-    {:ok, %User{socket: socket}}
+  def init([socket, host]) do
+    {:ok, %User{socket: socket, host: host}}
   end
 
   @doc """
@@ -80,6 +82,29 @@ defmodule IRC.User do
     GenServer.stop(user)
   end
 
+  @doc """
+    Отправка сообщения от одного пользователя другому
+  """
+  @spec privmsg(pid(), pid(), String.t()) :: :ok
+  def privmsg(user, target, msg) do
+    GenServer.cast(user, {:send_msg, target, msg})
+  end
+
+  def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}
+
+  # PRIVMSG
+
+  def handle_cast({:send_msg, target, msg}, user) do
+    GenServer.cast(target, {:receive_msg, user, msg})
+    {:noreply, user}
+  end
+
+  def handle_cast({:receive_msg, author, msg}, %User{socket: socket} = user) do
+    message = Reply.reply({:PRIVMSG, from(author), msg})
+    :gen_tcp.send(socket, message)
+    {:noreply, user}
+  end
+
   def handle_call({:get_param, param}, _, user), do: {:reply, Map.get(user, param), user}
 
   # NICK
@@ -110,8 +135,6 @@ defmodule IRC.User do
       {:reply, :ok, user}
     end
   end
-
-  def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}
 
   defp nick_valid?(nick) do
     Regex.match?(~r/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,9}\z/i, nick)
@@ -152,5 +175,9 @@ defmodule IRC.User do
   defp unregister_nick(nil), do: nil
   defp unregister_nick(nick) do
     Registry.unregister(UserRegistry, nick)
+  end
+
+  defp from(%User{nick: nick, login: login}) do
+    "#{nick}!#{login}@#{@server_name}"
   end
 end

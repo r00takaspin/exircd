@@ -2,9 +2,10 @@ defmodule UserTest do
   use ExUnit.Case
 
   alias IRC.User
+  alias IRC.Support.Factory
 
   setup do
-    {:ok, user} = IRC.Support.UserFactory.create_user()
+    {:ok, user} = Factory.user()
     %{user: user}
   end
 

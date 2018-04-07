@@ -62,18 +62,22 @@ defmodule IRC.ServerTest do
 
   describe "Messaging between users" do
     setup do
+      morty = Client.new(@port) |> Client.register("morty", "Morty", "Smith")
+      rick = Client.new(@port) |> Client.register("rick",  "Rich", "Sanchez")
       %{
-        rick: Client.new(@port) |> Client.register("rick",  "Rich", "Sanchez"),
-        morty: Client.new(@port) |> Client.register("morty", "Morty", "Smith")
+        rick: rick,
+        morty: morty
       }
     end
 
-    @tag :skip
     test "One user messages to another", %{rick: rick, morty: morty} do
       msg = "Hello morty"
-      Client.write(morty, "PRIVMSG rick :#{msg}")
+      server = Application.get_env(:exircd, :servername)
+      Client.write(rick, "PRIVMSG morty :#{msg}")
 
-      assert_receive {:tcp, ^rick, ":rick!rick@127.0.0.1 PRIVMSG :Hello morty\r\n"}
+      received_msg = ":rick!rick@#{server} PRIVMSG :Hello morty\r\n"
+
+      assert_receive {:tcp, ^morty, ^received_msg}
     end
 
     test "Allow messaging only for registered users" do
@@ -96,7 +100,5 @@ defmodule IRC.ServerTest do
 
       assert_receive {:tcp, ^rick, "401 <somebody> :No such nick/channel\r\n"}
     end
-
-
   end
 end
