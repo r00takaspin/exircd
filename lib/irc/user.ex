@@ -130,7 +130,7 @@ defmodule IRC.User do
     if can_register?(user, :user) do
       user = %{user | registered?: true}
       register_nick(nick)
-      {:reply, welcome_reply(user), user }
+      {:reply, welcome_reply(user), user}
     else
       {:reply, :ok, user}
     end

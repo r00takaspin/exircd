@@ -8,6 +8,7 @@ defmodule IRC.ServerTest do
   @login @nick
   @first_name "Voldemar"
   @last_name "Duletskiy"
+  @servername Application.get_env(:exircd, :servername)
 
   @welcome_messages [
     "001 Welcome to the Internet Relay Network #{@nick}!#{@login}@127.0.0.1>",
@@ -70,12 +71,26 @@ defmodule IRC.ServerTest do
       }
     end
 
+    test "Message to user with server difinition", %{rick: rick, morty: morty} do
+      Client.write(rick, "PRIVMSG morty@#{@servername} :Hello!")
+      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello!\r\n"
+
+      assert_receive {:tcp, ^morty, ^received_msg}
+    end
+
+    test "Wrong server", %{rick: rick, morty: morty} do
+      host = "fakehost"
+      Client.write(rick, "PRIVMSG morty@#{host} :Hey!")
+      msg = "402 #{host} :No such server\r\n"
+
+      assert_receive {:tcp, ^rick, ^msg}
+    end
+
     test "One user messages to another", %{rick: rick, morty: morty} do
       msg = "Hello morty"
-      server = Application.get_env(:exircd, :servername)
       Client.write(rick, "PRIVMSG morty :#{msg}")
 
-      received_msg = ":rick!rick@#{server} PRIVMSG :Hello morty\r\n"
+      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello morty\r\n"
 
       assert_receive {:tcp, ^morty, ^received_msg}
     end

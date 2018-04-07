@@ -19,6 +19,7 @@ defmodule IRC.Reply do
 
       # PRIVMSG
       ERR_NOSUCHNICK:       "401",
+      ERR_NOSUCHSERVER:     "402",
       ERR_NORECIPIENT:      "411",
       ERR_NOTEXTTOSEND:     "412",
 
@@ -69,6 +70,9 @@ defmodule IRC.Reply do
   end
   def error({:ERR_NOTEXTTOSEND}) do
     format :ERR_NOTEXTTOSEND, ":No text to send"
+  end
+  def error({:ERR_NOSUCHSERVER, servername}) do
+    format :ERR_NOSUCHSERVER, "#{servername} :No such server"
   end
 
   def error(msg), do: "Unknown error: #{msg}\r\n"
