@@ -17,6 +17,10 @@ defmodule IRC.Reply do
       RPL_CREATED:          "003",
       RPL_MYINFO:           "004",
 
+      # AWAY
+      RPL_AWAY:             "301",
+      RPL_UNAWAY:           "305",
+      RPL_NOWAWAY:          "306",
       # PRIVMSG
       ERR_NOSUCHNICK:       "401",
       ERR_NOSUCHSERVER:     "402",
@@ -83,6 +87,15 @@ defmodule IRC.Reply do
   def reply, do: nil
   def reply(list) when is_list(list) do
     list |> List.foldl("",fn(r, str) -> str <> reply(r) end)
+  end
+  def reply({:RPL_AWAY, nick, msg}) do
+    format :RPL_AWAY, "#{nick} :#{msg}"
+  end
+  def reply(:RPL_UNAWAY) do
+    format :RPL_UNAWAY, ":You are no longer marked as being away"
+  end
+  def reply(:RPL_NOWAWAY) do
+    format :RPL_NOWAWAY, ":You have been marked as being away"
   end
   def reply({:PRIVMSG, from, to, msg}) do
     format ":#{from} PRIVMSG #{to} :#{msg}"

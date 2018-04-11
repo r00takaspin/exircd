@@ -4,6 +4,10 @@ defmodule UserTest do
   alias IRC.User
   alias IRC.Support.Factory
 
+  @login "poopa"
+  @mode "w"
+  @real_name "Vasya Pupkin"
+
   setup do
     {:ok, user} = Factory.user()
     %{user: user}
@@ -46,10 +50,6 @@ defmodule UserTest do
     end
   end
 
-  @login "poopa"
-  @mode "w"
-  @real_name "Vasya Pupkin"
-
   describe "user/4" do
     test "register user", %{user: user} do
       result = user |> User.user(@login, @mode, @real_name)
@@ -65,9 +65,25 @@ defmodule UserTest do
     end
   end
 
-  describe "registered?" do
+  describe "registered?/1" do
     test "new user is not registered", %{user: user} do
       assert User.registered?(user) == false
+    end
+  end
+
+  describe "away/2" do
+    test "set away message", %{user: user} do
+      User.away(user, "Away")
+
+      assert User.get_param(user, :away_msg) == "Away"
+    end
+
+    test "unset away message", %{user: user} do
+      User.away(user, "Away")
+      user |> User.away("Away")
+      user |> User.away()
+
+      refute User.get_param(user, :away_msg)
     end
   end
 end

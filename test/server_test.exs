@@ -122,5 +122,28 @@ defmodule IRC.ServerTest do
 
       assert_receive {:tcp, ^rick, "401 <somebody> :No such nick/channel\r\n"}
     end
+
+    test "Morty away", %{rick: rick, morty: morty} do
+      away = "On date with Summer"
+
+      morty
+      |> Client.away("On date with Summer")
+
+      assert_receive {:tcp, ^morty, "306 :You have been marked as being away\r\n"}
+
+      rick
+      |> Client.write("PRIVMSG morty :Hi Morty!")
+
+      away_msg = "301 morty :#{away}\r\n"
+
+      assert_receive {:tcp, ^rick, ^away_msg}
+      privmsg = ":rick!rick@#{@servername} PRIVMSG morty :Hi Morty!\r\n"
+      assert_receive {:tcp, ^morty, ^privmsg}
+
+      morty
+      |> Client.away()
+
+      assert_receive {:tcp, ^morty, "305 :You are no longer marked as being away\r\n"}
+    end
   end
 end
