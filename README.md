@@ -99,6 +99,8 @@ telnet localhost 6667
 ##### Опциональные сообщения:
 
 - [ ] AWAY
+  - [ ] RPL_UNAWAY
+  - [ ] RPL_NOWAWAY
 - [ ] REHASH
 - [ ] RESTART
 - [ ] SUMMON
