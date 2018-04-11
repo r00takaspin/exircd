@@ -7,13 +7,11 @@ defmodule IRC.Supervisor do
 
   alias IRC.{ServerSupervisor, Server}
 
-  def start_link(opts) do
-    Supervisor.start_link(__MODULE__, :ok, opts)
+  def start_link(port) do
+    Supervisor.start_link(__MODULE__, port, [])
   end
 
-  def init(:ok) do
-    port = Application.get_env(:exircd, :port)
-
+  def init(port) do
     children = [
       {Task, fn -> Server.accept(port) end},
       {Task.Supervisor, name: ServerSupervisor},

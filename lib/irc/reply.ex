@@ -17,10 +17,18 @@ defmodule IRC.Reply do
       RPL_CREATED:          "003",
       RPL_MYINFO:           "004",
 
+      # PRIVMSG
+      ERR_NOSUCHNICK:       "401",
+      ERR_NOSUCHSERVER:     "402",
+      ERR_NORECIPIENT:      "411",
+      ERR_NOTEXTTOSEND:     "412",
+
       ERR_NICKNAMEINUSE:    "433",
       ERR_ERRONEUSNICKNAME: "432",
       ERR_NONICKNAMEGIVEN:  "431",
       ERR_UNAVAILRESOURCE:  "437",
+
+      ERR_NOTREGISTERED:    "451",
 
       ERR_NEEDMOREPARAMS:   "461",
       ERR_ALREADYREGISTRED: "462"
@@ -51,7 +59,23 @@ defmodule IRC.Reply do
   def error({:ERR_ALREADYREGISTRED}) do
     format :ERR_ALREADYREGISTRED, ":Unauthorized command (already registered)"
   end
-  def error(_msg), do: "Unknown error\r\n"
+  def error({:ERR_NOTREGISTERED}) do
+    format :ERR_NOTREGISTERED, ":You have not registered"
+  end
+  def error({:ERR_NOSUCHNICK, nick}) do
+    format :ERR_NOSUCHNICK, "<#{nick}> :No such nick/channel"
+  end
+  def error({:ERR_NORECIPIENT, command}) do
+    format :ERR_NORECIPIENT, ":No recipient given (<#{command}>)"
+  end
+  def error({:ERR_NOTEXTTOSEND}) do
+    format :ERR_NOTEXTTOSEND, ":No text to send"
+  end
+  def error({:ERR_NOSUCHSERVER, servername}) do
+    format :ERR_NOSUCHSERVER, "#{servername} :No such server"
+  end
+
+  def error(msg), do: "Unknown error: #{msg}\r\n"
 
   @doc """
     Вывод успешно завершенных комманд
@@ -60,7 +84,9 @@ defmodule IRC.Reply do
   def reply(list) when is_list(list) do
     list |> List.foldl("",fn(r, str) -> str <> reply(r) end)
   end
-
+  def reply({:PRIVMSG, from, msg}) do
+    format ":#{from} PRIVMSG :#{msg}"
+  end
   def reply({:RPL_WELCOME, nick, login, host}) do
     format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}>"
   end
@@ -76,6 +102,8 @@ defmodule IRC.Reply do
   def reply(_params), do: reply()
 
   defp reply_id(code), do: response_codes()[code]
+
+  defp format(str), do: "#{str}\r\n"
 
   defp format(code, str) do
     "#{reply_id(code)} #{str}\r\n"

@@ -2,9 +2,10 @@ defmodule UserTest do
   use ExUnit.Case
 
   alias IRC.User
+  alias IRC.Support.Factory
 
   setup do
-    {:ok, user} = IRC.Support.UserFactory.create_user()
+    {:ok, user} = Factory.user()
     %{user: user}
   end
 
@@ -56,10 +57,17 @@ defmodule UserTest do
     end
 
     test "register twice", %{user: user} do
+      User.nick(user, "poopa")
       user |> User.user(@login, @mode, @real_name)
       result = user |> User.user(@login, @mode, @real_name)
 
       assert {:error, :already_registered} == result
+    end
+  end
+
+  describe "registered?" do
+    test "new user is not registered", %{user: user} do
+      assert User.registered?(user) == false
     end
   end
 end

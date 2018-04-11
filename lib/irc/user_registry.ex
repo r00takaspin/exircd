@@ -5,6 +5,8 @@ defmodule IRC.UserRegistry do
 
   alias IRC.{User}
 
+  @network_adapter Application.get_env(:exircd, :network_adapter)
+
   def reset_meta() do
     Registry.put_meta(UserRegistry, :banned_nicknames, [])
   end
@@ -13,8 +15,10 @@ defmodule IRC.UserRegistry do
   Нахождение существующего или инициализация нового пользователя по сокету
   """
   def find_or_create_by_socket(socket) do
+    host = @network_adapter.get_ip(socket)
+
     case lookup(socket) do
-      false -> User.start_link(socket)
+      false -> User.start_link(socket, host)
       msg -> msg
     end
   end

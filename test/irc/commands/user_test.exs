@@ -1,7 +1,7 @@
 defmodule IRC.Commands.UserTest do
   use ExUnit.Case
 
-  alias IRC.{Commands.User, Support.UserFactory}
+  alias IRC.{Commands.User, Support.Factory}
 
   setup_all do
     {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
@@ -16,7 +16,7 @@ defmodule IRC.Commands.UserTest do
     @nick "voldemar"
 
     setup do
-      {:ok, user} = UserFactory.create_user()
+      {:ok, user} = Factory.user()
       %{user: user}
     end
 

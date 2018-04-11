@@ -3,59 +3,72 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.Commands.{Nick, User}
+  alias IRC.Commands.{Nick, User, Privmsg}
 
   @doc ~S"""
-  Parses the given `line` into a command.
-
-  ##Examples
-    iex> IRC.Command.parse("NICK john")
+    iex> IRC.Command.parse(["NICK", "john"])
     {:ok, {:nick, "john"}}
 
-    iex> IRC.Command.parse("NICK john\r\n")
-    {:ok, {:nick, "john"}}
 
-    iex> IRC.Command.parse("NICK john  \r\n")
-    {:ok, {:nick, "john"}}
-
-    iex> IRC.Command.parse("UNKNOWN asdasdad")
+    iex> IRC.Command.parse(["UNKNOWN", "asdasdad"])
     {:error, "Unknown command"}
 
-    iex> IRC.Command.parse("NICK")
-    {:ok, :nick}
+    iex> IRC.Command.parse(["NICK"])
+    {:error, {:ERR_NONICKNAMEGIVEN}}
 
-    iex> IRC.Command.parse("USER guest 0 * :Ronnie Reagan")
+    iex> IRC.Command.parse(["USER", "guest", "0", "*", "Ronnie Reagan"])
     {:ok, {:user, "guest", "0", "Ronnie Reagan"}}
-    iex> IRC.Command.parse("USER 2340-230489 923")
-    {:ok, :user}
+
+    iex> IRC.Command.parse(["USER", "vasya", "*", "*", "Vasya"])
+    {:ok, {:user, "vasya", "*", "Vasya"}}
+
+    iex> IRC.Command.parse(["USER", "2340-230489 923"])
+    {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
 
     iex> IRC.Command.parse(true)
     {:error, "Unknown command"}
+
+    iex> IRC.Command.parse(["PRIVMSG", "rick", "Hello Morty"])
+    {:ok, {:privmsg, "rick", "Hello Morty"}}
+
+    iex> IRC.Command.parse(["PRIVMSG"])
+    {:error, {:ERR_NORECIPIENT}}
+
+    iex> IRC.Command.parse(["PRIVMSG", "voldemar"])
+    {:error, {:ERR_NOTEXTTOSEND}}
   """
-  def parse(line) when is_binary(line) do
+
+  def parse(["USER"]), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
+  def parse(["USER", login, mode, "*", realname]), do: {:ok, {:user, login, mode, realname}}
+  def parse(["USER" | _tail]), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
+
+  def parse(["NICK"]), do: {:error, {:ERR_NONICKNAMEGIVEN}}
+  def parse(["NICK", nick]), do: {:ok, {:nick, nick}}
+
+  def parse(["PRIVMSG"]), do: {:error, {:ERR_NORECIPIENT}}
+  def parse(["PRIVMSG", nick, message]), do: {:ok, {:privmsg, nick, message}}
+  def parse(["PRIVMSG", _nick]), do: {:error, {:ERR_NOTEXTTOSEND}}
+
+  def parse(_args), do: {:error, "Unknown command"}
+
+  def parse_line(line) do
     line
-    |> String.split
+    |> String.trim
+    |> String.split(":", trim: true)
     |> case do
-        ["NICK"] ->
-          {:ok, :nick}
-        ["NICK", nick] ->
-          {:ok, {:nick, nick}}
-        ["USER", login, mode, "*", first_name, last_name] ->
-          {:ok, {:user, login, mode, "#{String.replace(first_name, ":", "")} #{last_name}"}}
-        ["USER" | [_ | _]] -> {:ok, :user}
-        _ -> {:error, "Unknown command"}
-       end
+      [^line] -> String.split(line, [" "], trim: true)
+      [head | tail] -> parse_line(head) ++ tail
+    end
   end
-  def parse(_), do: {:error, "Unknown command"}
 
-  def run(_user, :nick), do: {:error, {:ERR_NONICKNAMEGIVEN}}
-  def run(_user, :user), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
-
-  @spec run(IRC.Session.t, {:nick, nick::String.t}) :: :ok | {:error, term}
+  @spec run(user :: pid(), {:nick, String.t}) :: :ok | {:error, term}
   def run(user, {:nick, nick}) do
     Nick.run(user, nick)
   end
   def run(user, {:user, login, mode, realname}) do
     User.run(user, login, mode, realname)
+  end
+  def run(user, {:privmsg, target, msg}) do
+    Privmsg.run(user, target, msg)
   end
 end

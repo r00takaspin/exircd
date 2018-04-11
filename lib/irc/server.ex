@@ -7,7 +7,7 @@ defmodule IRC.Server do
 
   use GenServer
 
-  alias IRC.{ServerSupervisor, UserRegistry, Reply, Command}
+  alias IRC.{ServerSupervisor, UserRegistry, Reply, Command, User}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
@@ -41,7 +41,7 @@ defmodule IRC.Server do
     {:ok, user} = UserRegistry.find_or_create_by_socket(socket)
 
     with line <- read_line(socket),
-         {:ok, command} <- Command.parse(line),
+         {:ok, command} <- parse_line(user, line),
          {:ok, reply} <- Command.run(user, command) do
             reply
             |> Reply.reply()
@@ -54,12 +54,22 @@ defmodule IRC.Server do
     serve(socket)
   end
 
+  defp parse_line(user, line) do
+    cond do
+      User.registered?(user) || String.starts_with?(line, ["USER", "NICK"]) ->
+        line
+        |> Command.parse_line
+        |> Command.parse
+      true -> {:error, {:ERR_NOTREGISTERED}}
+    end
+  end
+
   defp read_line(socket) do
     :gen_tcp.recv(socket, 0)
     |> case do
       {:ok, data} ->
         debug(socket, "Request: #{data}")
-        data
+        String.trim(data)
 
       {:error, :closed} ->
         case UserRegistry.lookup(socket) do

@@ -1,7 +1,7 @@
 defmodule UserRegistryTest do
   use ExUnit.Case
 
-  alias IRC.{User, Support.UserFactory}
+  alias IRC.{User, Support.Factory}
 
   setup_all do
     {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
@@ -15,7 +15,7 @@ defmodule UserRegistryTest do
 
   describe "find_or_create_by_socket/2" do
     test "finds user by socket" do
-      {:ok, new_user} = UserFactory.create_user()
+      {:ok, new_user} = Factory.user()
 
       socket = User.get_param(new_user, :socket)
 
@@ -40,17 +40,18 @@ defmodule UserRegistryTest do
     end
 
     test "find existing nickname" do
-      {:ok, user} = UserFactory.create_user()
+      {:ok, user} = Factory.user()
       User.nick(user, @nick)
+      User.user(user, "vasya", "*", "Vasya Petrov")
       {:ok, pid} = IRC.UserRegistry.lookup(@nick)
 
       assert User.get_param(pid, :nick) == @nick
     end
   end
 
-  describe "change_nick/3" do
+  describe "nick/2" do
     setup do
-      {:ok, user} = UserFactory.create_user()
+      user = Factory.user(:registered, "vasya")
       %{user: user}
     end
 
@@ -58,8 +59,7 @@ defmodule UserRegistryTest do
     @new_nick "loopa"
 
     test "set nickname", %{user: user} do
-      subject = IRC.UserRegistry.nick(user, @new_nick)
-      assert  {:ok, _pid} = subject
+      assert {:ok, _pid} = IRC.UserRegistry.nick(user, @new_nick)
     end
 
     test "change nick several times", %{user: user} do
@@ -69,13 +69,14 @@ defmodule UserRegistryTest do
       {:ok, loopa} = IRC.UserRegistry.lookup(@new_nick)
       assert @new_nick == loopa |> IRC.User.nick
 
-      {:ok, _} = IRC.UserRegistry.nick(user, @old_nick)
+      {:ok, poopa} = IRC.UserRegistry.nick(user, @old_nick)
+      assert User.nick(poopa) == @old_nick
     end
   end
 
   describe "ban/2" do
     setup do
-      {:ok, user} = UserFactory.create_user()
+      {:ok, user} = Factory.user()
       %{user: user}
     end
 
