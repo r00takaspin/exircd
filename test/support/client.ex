@@ -12,6 +12,10 @@ defmodule IRC.Client do
     socket |> write("USER #{login} * * :#{first_name} #{last_name}")
   end
 
+  def user(socket, login, realname) do
+    socket |> write("USER #{login} * * :#{realname}")
+  end
+
   def register(socket, nick, first_name, last_name) do
     socket
     |> nick(nick)

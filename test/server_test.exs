@@ -35,6 +35,13 @@ defmodule IRC.ServerTest do
       %{socket: socket}
     end
 
+    test "Without last name", %{socket: socket} do
+      socket
+      |> Client.nick(@nick)
+      |> Client.user(@login, "Voldemar")
+      |> check_welcome
+    end
+
     test "Basic registration scanario: user -> nick", %{socket: socket} do
       socket
       |> Client.user(@login, @first_name, @last_name)
@@ -78,7 +85,7 @@ defmodule IRC.ServerTest do
       assert_receive {:tcp, ^morty, ^received_msg}
     end
 
-    test "Wrong server", %{rick: rick, morty: morty} do
+    test "Wrong server", %{rick: rick} do
       host = "fakehost"
       Client.write(rick, "PRIVMSG morty@#{host} :Hey!")
       msg = "402 #{host} :No such server\r\n"

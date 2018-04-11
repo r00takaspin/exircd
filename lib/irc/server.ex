@@ -55,10 +55,11 @@ defmodule IRC.Server do
   end
 
   defp parse_line(user, line) do
-    registered = User.registered?(user)
     cond do
-      registered -> Command.parse(line)
-      String.starts_with?(line, ["USER", "NICK"]) -> Command.parse(line)
+      User.registered?(user) || String.starts_with?(line, ["USER", "NICK"]) ->
+        line
+        |> Command.parse_line
+        |> Command.parse
       true -> {:error, {:ERR_NOTREGISTERED}}
     end
   end
