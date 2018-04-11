@@ -1,6 +1,6 @@
 defmodule IRC.User do
   @moduledoc """
-    Процесс хранящий все данные пользователя
+  Процесс хранящий все данные пользователя
   """
 
   use GenServer
@@ -16,10 +16,11 @@ defmodule IRC.User do
             mode: "",
             host: nil,
             socket: nil,
+            away_msg: nil,
             registered?: false
 
   @doc """
-    Запуск процесса пользователя
+  Запуск процесса пользователя
   """
   def start_link(socket, host) do
     name = via_tuple(socket)
@@ -40,7 +41,7 @@ defmodule IRC.User do
   def get_param(user, param), do: GenServer.call(user, {:get_param, param})
 
   @doc """
-    Задается никнейм пользователя
+  Задается никнейм пользователя
   """
   @spec nick(user :: pid(), nick :: String.t()) :: term()
   def nick(user, nick) do
@@ -53,7 +54,7 @@ defmodule IRC.User do
   end
 
   @doc """
-    Проверка регистрации пользователя
+  Проверка регистрации пользователя
   """
   @spec registered?(user :: pid()) :: boolean
   def registered?(user) do
@@ -61,11 +62,36 @@ defmodule IRC.User do
   end
 
   @doc """
-    Возвращает никнейм пользователя
+  Находится ли пользователь в статусе away
   """
-  @spec nick(pid()) :: {:ok, String.t()}
+  @spec away?(user :: pid()) :: boolean
+  def away?(user) do
+    !is_nil(User.get_param(user, :away_msg))
+  end
+
+  @doc """
+  Возвращает никнейм пользователя
+  """
+  @spec nick(user :: pid()) :: {:ok, String.t()}
   def nick(user) do
     get_param(user, :nick)
+  end
+
+
+  @doc """
+  Удаляет статус Away
+  """
+  @spec away(user :: pid()) :: :ok
+  def away(user) do
+    GenServer.cast(user, :away)
+  end
+
+  @doc """
+  Выставляет статус Away
+  """
+  @spec away(user :: pid(), msg :: String.t) :: :ok
+  def away(user, msg) do
+    GenServer.cast(user, {:away, msg})
   end
 
   def user(user, login, mode, realname) do
@@ -90,7 +116,9 @@ defmodule IRC.User do
     GenServer.cast(user, {:send_msg, target, msg})
   end
 
-  def handle_cast(:lock, %User{} = user), do: {:noreply, %{user | locked: true}}
+  def handle_cast(:lock, user), do: {:noreply, %{user | locked: true}}
+  def handle_cast(:away, user), do: {:noreply, %{user | away_msg: nil}}
+  def handle_cast({:away, msg}, user), do: {:noreply, %{user | away_msg: msg}}
 
   # PRIVMSG
 
@@ -99,8 +127,8 @@ defmodule IRC.User do
     {:noreply, user}
   end
 
-  def handle_cast({:receive_msg, author, msg}, %User{socket: socket} = user) do
-    message = Reply.reply({:PRIVMSG, from(author), msg})
+  def handle_cast({:receive_msg, author, msg}, %User{socket: socket, nick: nick} = user) do
+    message = Reply.reply({:PRIVMSG, from(author), nick, msg})
     :gen_tcp.send(socket, message)
     {:noreply, user}
   end

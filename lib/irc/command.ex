@@ -3,7 +3,7 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.Commands.{Nick, User, Privmsg}
+  alias IRC.Commands.{Nick, User, Privmsg, Away}
 
   @doc ~S"""
     iex> IRC.Command.parse(["NICK", "john"])
@@ -36,7 +36,16 @@ defmodule IRC.Command do
 
     iex> IRC.Command.parse(["PRIVMSG", "voldemar"])
     {:error, {:ERR_NOTEXTTOSEND}}
+
+    iex> IRC.Command.parse(["AWAY"])
+    {:ok, :away}
+
+    iex> IRC.Command.parse(["AWAY", "msg"])
+    {:ok, {:away, "msg"}}
   """
+
+  def parse(["AWAY"]), do: {:ok, :away}
+  def parse(["AWAY", msg]), do: {:ok, {:away, msg}}
 
   def parse(["USER"]), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
   def parse(["USER", login, mode, "*", realname]), do: {:ok, {:user, login, mode, realname}}
@@ -70,5 +79,11 @@ defmodule IRC.Command do
   end
   def run(user, {:privmsg, target, msg}) do
     Privmsg.run(user, target, msg)
+  end
+  def run(user, {:away, msg}) do
+    Away.run(user, msg)
+  end
+  def run(user, :away) do
+    Away.run(user)
   end
 end
