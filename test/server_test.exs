@@ -80,7 +80,7 @@ defmodule IRC.ServerTest do
 
     test "Message to user with server difinition", %{rick: rick, morty: morty} do
       Client.write(rick, "PRIVMSG morty@#{@servername} :Hello!")
-      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello!\r\n"
+      received_msg = ":rick!rick@#{@servername} PRIVMSG morty :Hello!\r\n"
 
       assert_receive {:tcp, ^morty, ^received_msg}
     end
@@ -97,7 +97,7 @@ defmodule IRC.ServerTest do
       msg = "Hello morty"
       Client.write(rick, "PRIVMSG morty :#{msg}")
 
-      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello morty\r\n"
+      received_msg = ":rick!rick@#{@servername} PRIVMSG morty :Hello morty\r\n"
 
       assert_receive {:tcp, ^morty, ^received_msg}
     end

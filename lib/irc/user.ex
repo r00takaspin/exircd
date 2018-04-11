@@ -99,8 +99,8 @@ defmodule IRC.User do
     {:noreply, user}
   end
 
-  def handle_cast({:receive_msg, author, msg}, %User{socket: socket} = user) do
-    message = Reply.reply({:PRIVMSG, from(author), msg})
+  def handle_cast({:receive_msg, author, msg}, %User{socket: socket, nick: nick} = user) do
+    message = Reply.reply({:PRIVMSG, from(author), nick, msg})
     :gen_tcp.send(socket, message)
     {:noreply, user}
   end
