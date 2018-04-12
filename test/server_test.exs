@@ -80,7 +80,7 @@ defmodule IRC.ServerTest do
 
     test "Message to user with server difinition", %{rick: rick, morty: morty} do
       Client.write(rick, "PRIVMSG morty@#{@servername} :Hello!")
-      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello!\r\n"
+      received_msg = ":rick!rick@#{@servername} PRIVMSG morty :Hello!\r\n"
 
       assert_receive {:tcp, ^morty, ^received_msg}
     end
@@ -97,7 +97,7 @@ defmodule IRC.ServerTest do
       msg = "Hello morty"
       Client.write(rick, "PRIVMSG morty :#{msg}")
 
-      received_msg = ":rick!rick@#{@servername} PRIVMSG :Hello morty\r\n"
+      received_msg = ":rick!rick@#{@servername} PRIVMSG morty :Hello morty\r\n"
 
       assert_receive {:tcp, ^morty, ^received_msg}
     end
@@ -121,6 +121,29 @@ defmodule IRC.ServerTest do
       |> Client.write("PRIVMSG somebody :Hey!")
 
       assert_receive {:tcp, ^rick, "401 <somebody> :No such nick/channel\r\n"}
+    end
+
+    test "Morty away", %{rick: rick, morty: morty} do
+      away = "On date with Summer"
+
+      morty
+      |> Client.away("On date with Summer")
+
+      assert_receive {:tcp, ^morty, "306 :You have been marked as being away\r\n"}
+
+      rick
+      |> Client.write("PRIVMSG morty :Hi Morty!")
+
+      away_msg = "301 morty :#{away}\r\n"
+
+      assert_receive {:tcp, ^rick, ^away_msg}
+      privmsg = ":rick!rick@#{@servername} PRIVMSG morty :Hi Morty!\r\n"
+      assert_receive {:tcp, ^morty, ^privmsg}
+
+      morty
+      |> Client.away()
+
+      assert_receive {:tcp, ^morty, "305 :You are no longer marked as being away\r\n"}
     end
   end
 end

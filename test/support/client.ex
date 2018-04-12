@@ -22,6 +22,16 @@ defmodule IRC.Client do
     |> user(nick, first_name, last_name)
   end
 
+  def away(socket, msg) do
+    socket
+    |> write("AWAY :#{msg}")
+  end
+
+  def away(socket) do
+    socket
+    |> write("AWAY")
+  end
+
   def write(socket, msg) do
     :gen_tcp.send(socket, "#{msg}\r\n")
     socket

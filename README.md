@@ -78,7 +78,7 @@ telnet localhost 6667
   - [ ] ERR_WILDTOPLEVEL
   - [X] ERR_NOSUCHNICK
   - [X] ERR_NOSUCHSERVER
-  - [ ] RPL_AWAY
+  - [X] RPL_AWAY
   - [X] ERR_NOTEXTTOSEND
   - [ ] ERR_NOTOPLEVEL
 - [ ] NOTICE
@@ -98,7 +98,9 @@ telnet localhost 6667
 
 ##### Опциональные сообщения:
 
-- [ ] AWAY
+- [X] AWAY
+  - [X] RPL_UNAWAY
+  - [X] RPL_NOWAWAY
 - [ ] REHASH
 - [ ] RESTART
 - [ ] SUMMON
