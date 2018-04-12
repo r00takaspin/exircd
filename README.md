@@ -43,7 +43,7 @@ telnet localhost 6667
 - [X] USER
 	- [X] ERR_ALREADYREGISTRED
 	- [X] ERR_NEEDMOREPARAMS
-- [ ] SERVER
+- [ ] SERVICE
 - [ ] OPER
 - [ ] QUIT
 - [ ] SQUIT
