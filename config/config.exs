@@ -1,9 +1,15 @@
 use Mix.Config
 
+get_hostname = fn ->
+  {host, _} = System.cmd("hostname",[])
+  String.trim(host)
+end
+
 config :exircd, port: 6667
 config :exircd, user_modes: "aiwroOs"
 config :exircd, chanel_modes: "asdasdasdasd"
 config :exircd, servername: "Ironclad"
+config :exircd, serverhost: get_hostname.()
 config :exircd, version: "0.0.1 alpha"
 config :exircd, server_created: "Sat Mar 3 2018 at 03:57:37 EDT"
 

@@ -20,9 +20,10 @@ defmodule IRC.Server do
   """
 
   def accept(port) do
+    host = Application.get_env(:exircd, :serverhost)
     {:ok, socket} = :gen_tcp.listen(port,
       [:binary, packet: :line, active: false, reuseaddr: true])
-    Logger.info "Accepting connections on port #{port}"
+    Logger.info "Accepting connections on port #{host}:#{port}"
     loop_acceptor(socket)
   end
 
