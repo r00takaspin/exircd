@@ -6,6 +6,7 @@ defmodule IRC.UserRegistry do
   alias IRC.{User}
 
   @network_adapter Application.get_env(:exircd, :network_adapter)
+  @server_name Application.get_env(:exircd, :servername)
 
   def reset_meta() do
     Registry.put_meta(UserRegistry, :banned_nicknames, [])
@@ -20,6 +21,17 @@ defmodule IRC.UserRegistry do
     case lookup(socket) do
       false -> User.start_link(socket, host)
       msg -> msg
+    end
+  end
+
+  def get(target) do
+    case get_nick(target) do
+      {:error, msg} -> {:error, msg}
+      nick ->
+        case lookup(nick) do
+          false -> {:error, {:ERR_NOSUCHNICK, target}}
+          {:ok, target_pid} -> target_pid
+        end
     end
   end
 
@@ -92,4 +104,12 @@ defmodule IRC.UserRegistry do
   end
 
   defp success_reply(user), do: {:ok, user}
+
+  defp get_nick(username) do
+    case String.split(username, "@") do
+      [^username] -> username
+      [username, @server_name] -> username
+      [_username, servername] -> {:error, {:ERR_NOSUCHSERVER, servername}}
+    end
+  end
 end

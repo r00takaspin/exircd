@@ -3,7 +3,7 @@ defmodule IRC.Command do
     Парсинг и выполнение IRC комманд
   """
 
-  alias IRC.Commands.{Nick, User, Privmsg, Away}
+  alias IRC.Commands.{Nick, User, Privmsg, Away, Whois}
 
   @doc ~S"""
     iex> IRC.Command.parse(["NICK", "john"])
@@ -65,6 +65,7 @@ defmodule IRC.Command do
   def parse(["PRIVMSG", _nick]), do: {:error, {:ERR_NOTEXTTOSEND}}
 
   def parse(["WHOIS"]), do: {:error, {:ERR_NONICKNAMEGIVEN}}
+  def parse(["WHOIS", target]), do: {:ok, {:whois, target}}
 
   def parse(_args), do: {:error, "Unknown command"}
 
@@ -93,5 +94,8 @@ defmodule IRC.Command do
   end
   def run(user, :away) do
     Away.run(user)
+  end
+  def run(user, {:whois, target}) do
+    Whois.run(user, target)
   end
 end

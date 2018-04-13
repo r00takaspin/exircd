@@ -163,5 +163,21 @@ defmodule IRC.ServerTest do
 
       assert_receive {:tcp, ^rick, "431 :No nickname given\r\n"}
     end
+
+    test "wrong receiped", %{rick: rick} do
+      rick
+      |> Client.write("WHOIS drwho")
+
+      assert_receive {:tcp, ^rick, "401 <drwho> :No such nick/channel\r\n"}
+    end
+
+    test "recepiet at wrong server", %{rick: rick} do
+      rick
+      |> Client.write("WHOIS morty@somehost")
+
+      msg = "402 somehost :No such server\r\n"
+
+      assert_receive {:tcp, ^rick, ^msg}
+    end
   end
 end

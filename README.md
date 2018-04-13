@@ -87,17 +87,17 @@ telnet localhost 6667
 
 - [ ] WHO
 - [ ] WHOIS
-  - [ ] ERR_NOSUCHSERVER
+  - [X] ERR_NOSUCHSERVER
   - [ ] RPL_WHOISUSER
   - [ ] RPL_WHOISCHANNELS
   - [ ] RPL_AWAY
   - [ ] RPL_WHOISIDLE
   - [ ] RPL_ENDOFWHOIS
-  - [ ] ERR_NONICKNAMEGIVEN
+  - [X] ERR_NONICKNAMEGIVEN
   - [ ] RPL_WHOISCHANNELS
   - [ ] RPL_WHOISSERVER
   - [ ] RPL_WHOISOPERATOR
-  - [ ] ERR_NOSUCHNICK
+  - [X] ERR_NOSUCHNICK
 - [ ] WHOWAS
 
 ##### Остальные команды:
