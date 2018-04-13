@@ -45,6 +45,9 @@ defmodule IRC.Command do
 
     iex> IRC.Command.parse(["AWAY", "msg"])
     {:ok, {:away, "msg"}}
+
+    iex> IRC.Command.parse(["WHOIS"])
+    {:error, {:ERR_NONICKNAMEGIVEN}}
   """
 
   def parse(["AWAY"]), do: {:ok, :away}
@@ -60,6 +63,8 @@ defmodule IRC.Command do
   def parse(["PRIVMSG"]), do: {:error, {:ERR_NORECIPIENT}}
   def parse(["PRIVMSG", nick, message]), do: {:ok, {:privmsg, nick, message}}
   def parse(["PRIVMSG", _nick]), do: {:error, {:ERR_NOTEXTTOSEND}}
+
+  def parse(["WHOIS"]), do: {:error, {:ERR_NONICKNAMEGIVEN}}
 
   def parse(_args), do: {:error, "Unknown command"}
 

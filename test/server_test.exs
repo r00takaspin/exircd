@@ -146,4 +146,22 @@ defmodule IRC.ServerTest do
       assert_receive {:tcp, ^morty, "305 :You are no longer marked as being away\r\n"}
     end
   end
+
+  describe "WHOIS" do
+    setup do
+      morty = Client.new(@port) |> Client.register("morty", "Morty", "Smith")
+      rick = Client.new(@port) |> Client.register("rick",  "Rich", "Sanchez")
+      %{
+        rick: rick,
+        morty: morty
+      }
+    end
+
+    test "empty params", %{rick: rick} do
+      rick
+      |> Client.write("WHOIS")
+
+      assert_receive {:tcp, ^rick, "431 :No nickname given\r\n"}
+    end
+  end
 end
