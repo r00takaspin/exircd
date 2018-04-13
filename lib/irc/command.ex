@@ -17,10 +17,13 @@ defmodule IRC.Command do
     {:error, {:ERR_NONICKNAMEGIVEN}}
 
     iex> IRC.Command.parse(["USER", "guest", "0", "*", "Ronnie Reagan"])
-    {:ok, {:user, "guest", "0", "Ronnie Reagan"}}
+    {:ok, {:user, "guest", "0", "*", "Ronnie Reagan"}}
 
     iex> IRC.Command.parse(["USER", "vasya", "*", "*", "Vasya"])
-    {:ok, {:user, "vasya", "*", "Vasya"}}
+    {:ok, {:user, "vasya", "*", "*", "Vasya"}}
+
+    iex> IRC.Command.parse(["USER", "voldemar", "voldemar", "Ironclad.local", "Вольдэмар Дулецкий"])
+    {:ok, {:user, "voldemar", "voldemar", "Ironclad.local", "Вольдэмар Дулецкий"}}
 
     iex> IRC.Command.parse(["USER", "2340-230489 923"])
     {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
@@ -48,7 +51,7 @@ defmodule IRC.Command do
   def parse(["AWAY", msg]), do: {:ok, {:away, msg}}
 
   def parse(["USER"]), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
-  def parse(["USER", login, mode, "*", realname]), do: {:ok, {:user, login, mode, realname}}
+  def parse(["USER", login, mode, server, realname]), do: {:ok, {:user, login, mode, server, realname}}
   def parse(["USER" | _tail]), do: {:error, {:ERR_NEEDMOREPARAMS, "USER"}}
 
   def parse(["NICK"]), do: {:error, {:ERR_NONICKNAMEGIVEN}}
@@ -74,7 +77,7 @@ defmodule IRC.Command do
   def run(user, {:nick, nick}) do
     Nick.run(user, nick)
   end
-  def run(user, {:user, login, mode, realname}) do
+  def run(user, {:user, login, mode, server, realname}) do
     User.run(user, login, mode, realname)
   end
   def run(user, {:privmsg, target, msg}) do

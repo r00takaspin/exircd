@@ -4,6 +4,7 @@ defmodule IRC.Reply do
   """
 
   @servername Application.get_env(:exircd, :servername)
+  @serverhost Application.get_env(:exircd, :serverhost)
   @version Application.get_env(:exircd, :version)
   @start_date Application.get_env(:exircd, :server_created)
   @user_modes Application.get_env(:exircd, :user_modes)
@@ -21,6 +22,7 @@ defmodule IRC.Reply do
       RPL_AWAY:             "301",
       RPL_UNAWAY:           "305",
       RPL_NOWAWAY:          "306",
+
       # PRIVMSG
       ERR_NOSUCHNICK:       "401",
       ERR_NOSUCHSERVER:     "402",
@@ -101,7 +103,7 @@ defmodule IRC.Reply do
     format ":#{from} PRIVMSG #{to} :#{msg}"
   end
   def reply({:RPL_WELCOME, nick, login, host}) do
-    format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}>"
+    format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}"
   end
   def reply(:RPL_YOURHOST) do
     format :RPL_YOURHOST, "Your host is #{@servername}, running version #{@version}"

@@ -11,7 +11,7 @@ defmodule IRC.ServerTest do
   @servername Application.get_env(:exircd, :servername)
 
   @welcome_messages [
-    "001 Welcome to the Internet Relay Network #{@nick}!#{@login}@127.0.0.1>",
+    "001 Welcome to the Internet Relay Network #{@nick}!#{@login}@127.0.0.1",
     "002 Your host is Ironclad, running version 0.0.1 alpha",
     "003 This server was created Sat Mar 3 2018 at 03:57:37 EDT",
     "004 Ironclad 0.0.1 alpha aiwroOs asdasdasdasd"
