@@ -9,7 +9,25 @@ defmodule IRC.User do
 
   @server_host Application.get_env(:exircd, :serverhost)
 
-  defstruct nick: nil,
+  @typedoc """
+  Информация о пользователе.
+  """
+
+  @type t :: %__MODULE__{
+    pid: pid,
+    nick: String.t | nil,
+    locked: boolean,
+    login: String.t | nil,
+    realname: String.t | nil,
+    mode: String.t | nil,
+    host: String.t | nil,
+    socket: port | nil,
+    away_msg: String.t | nil,
+    registered?: boolean
+  }
+
+  defstruct pid: nil,
+            nick: nil,
             locked: false,
             login: nil,
             realname: nil,
@@ -36,6 +54,14 @@ defmodule IRC.User do
   end
 
   @doc """
+  Все данные пользователя.
+  """
+  @spec info(user :: pid()) :: User.t()
+  def info(user) do
+    GenServer.call(user, :info)
+  end
+
+  @doc """
   Получаем параметр пользователя по его PID
   """
   def get_param(user, param), do: GenServer.call(user, {:get_param, param})
@@ -58,7 +84,7 @@ defmodule IRC.User do
   """
   @spec registered?(user :: pid()) :: boolean
   def registered?(user) do
-    User.get_param(user, :registered?)
+    User.info(user).registered?
   end
 
   @doc """
@@ -134,6 +160,10 @@ defmodule IRC.User do
   end
 
   def handle_call({:get_param, param}, _, user), do: {:reply, Map.get(user, param), user}
+
+  # INFO
+
+  def handle_call(:info, _, user), do: {:reply, %User{ user | pid: self()}, user}
 
   # NICK
 

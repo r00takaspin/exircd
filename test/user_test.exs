@@ -86,4 +86,14 @@ defmodule UserTest do
       refute User.get_param(user, :away_msg)
     end
   end
+
+  describe "info/1" do
+    test "new user", %{user: user} do
+      User.nick(user, "vasya")
+      User.user(user, "vasya", "*", "Vasya Pupkin")
+      info = User.info(user)
+
+      assert %User{pid: ^user, nick: "vasya", realname: "Vasya Pupkin"} = info
+    end
+  end
 end
