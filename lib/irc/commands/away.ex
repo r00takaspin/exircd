@@ -12,8 +12,9 @@ defmodule IRC.Commands.Away do
   @spec run(user :: pid()) :: unaway
   def run(user) do
     user |> User.away
+    nick = User.nick(user)
 
-    {:ok, :RPL_UNAWAY}
+    {:ok, {:RPL_UNAWAY, nick}}
   end
 
   @typedoc """
@@ -23,7 +24,8 @@ defmodule IRC.Commands.Away do
   @spec run(user :: pid(), msg :: String.t) :: away
   def run(user, msg) do
     user |> User.away(msg)
+    nick = User.nick(user)
 
-    {:ok, :RPL_NOWAWAY}
+    {:ok, {:RPL_NOWAWAY, nick}}
   end
 end

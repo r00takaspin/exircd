@@ -7,7 +7,7 @@ defmodule IRC.User do
 
   alias IRC.{User, Reply}
 
-  @server_name Application.get_env(:exircd, :servername)
+  @server_host Application.get_env(:exircd, :serverhost)
 
   defstruct nick: nil,
             locked: false,
@@ -99,7 +99,7 @@ defmodule IRC.User do
   end
 
   @doc """
-    Блокировка пользователя
+  Блокировка пользователя
   """
   @spec lock(pid()) :: :ok
   def lock(user), do: GenServer.cast(user, :lock)
@@ -109,7 +109,7 @@ defmodule IRC.User do
   end
 
   @doc """
-    Отправка сообщения от одного пользователя другому
+  Отправка сообщения от одного пользователя другому
   """
   @spec privmsg(pid(), pid(), String.t()) :: :ok
   def privmsg(user, target, msg) do
@@ -206,6 +206,6 @@ defmodule IRC.User do
   end
 
   defp from(%User{nick: nick, login: login}) do
-    "#{nick}!#{login}@#{@server_name}"
+    "#{nick}!#{login}@#{@server_host}"
   end
 end

@@ -19,7 +19,8 @@ defmodule IRC.Commands.Privmsg do
         # TODO: метод User.info(user) должен содержать всю информацию о пользвателе
         # и вызываться при выполнении команды
         if User.away?(target_pid) do
-          {:ok, {:RPL_AWAY, target, User.get_param(target_pid, :away_msg)}}
+          nick = User.nick(author_pid)
+          {:ok, {:RPL_AWAY, nick, target, User.get_param(target_pid, :away_msg)}}
         else
           :ok
         end

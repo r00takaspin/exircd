@@ -1,15 +1,16 @@
 defmodule IRC.UserRegistry do
   @moduledoc """
-    Интерфейс к реестру юзеров
+  Интерфейс к реестру юзеров
   """
 
   alias IRC.{User}
 
   @network_adapter Application.get_env(:exircd, :network_adapter)
-  @server_name Application.get_env(:exircd, :servername)
+  @server_host Application.get_env(:exircd, :serverhost)
+  @registry UserRegistry
 
   def reset_meta() do
-    Registry.put_meta(UserRegistry, :banned_nicknames, [])
+    Registry.put_meta(@registry, :banned_nicknames, [])
   end
 
   @doc """
@@ -39,7 +40,7 @@ defmodule IRC.UserRegistry do
     Поиск пользователя по никнейму/сокету
   """
   def lookup(key) do
-    case Registry.lookup(UserRegistry, key) do
+    case Registry.lookup(@registry, key) do
       [] -> false
       [{pid, _} |_] -> {:ok, pid}
     end
@@ -68,7 +69,7 @@ defmodule IRC.UserRegistry do
   def ban(nick) do
     banned = banned_nicknames()
     unless Enum.member?(banned, nick) do
-      Registry.put_meta(UserRegistry, :banned_nicknames, banned ++ [nick])
+      Registry.put_meta(@registry, :banned_nicknames, banned ++ [nick])
     end
     :ok
   end
@@ -87,9 +88,9 @@ defmodule IRC.UserRegistry do
   end
 
   defp banned_nicknames do
-    case Registry.meta(UserRegistry, :banned_nicknames) do
+    case Registry.meta(@registry, :banned_nicknames) do
       :error ->
-        Registry.put_meta(UserRegistry, :banned_nicknames, [])
+        Registry.put_meta(@registry, :banned_nicknames, [])
         []
       {:ok, nicknames} -> nicknames
     end
@@ -108,7 +109,7 @@ defmodule IRC.UserRegistry do
   defp get_nick(username) do
     case String.split(username, "@") do
       [^username] -> username
-      [username, @server_name] -> username
+      [username, @server_host] -> username
       [_username, servername] -> {:error, {:ERR_NOSUCHSERVER, servername}}
     end
   end

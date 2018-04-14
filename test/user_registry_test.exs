@@ -33,6 +33,31 @@ defmodule UserRegistryTest do
     end
   end
 
+  describe "get/1" do
+    setup do
+      user = Factory.user(:registered, "root")
+      %{user: user}
+    end
+
+    test "no such user" do
+      assert IRC.UserRegistry.get("nobody") == {:error, {:ERR_NOSUCHNICK, "nobody"}}
+    end
+
+    test "get user by nick without server", %{user: user} do
+      assert ^user = IRC.UserRegistry.get("root")
+    end
+
+    test "get user on this server", %{user: user} do
+      serverhost = Application.get_env(:exircd, :serverhost)
+
+      assert ^user = IRC.UserRegistry.get("root@#{serverhost}")
+    end
+
+    test "wrong server" do
+      assert {:error, {:ERR_NOSUCHSERVER, "server"}} = IRC.UserRegistry.get("root@server")
+    end
+  end
+
   describe "lookup/1" do
     @nick "test"
     test "return error if empty repository" do

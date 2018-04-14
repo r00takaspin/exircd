@@ -22,9 +22,9 @@ defmodule IRC.Commands.User do
       :ok,
       [
         {:RPL_WELCOME, nick, login, host},
-        :RPL_YOURHOST,
-        :RPL_CREATED,
-        :RPL_MYINFO
+        {:RPL_YOURHOST, nick},
+        {:RPL_CREATED, nick},
+        {:RPL_MYINFO, nick}
       ]
     }
   end

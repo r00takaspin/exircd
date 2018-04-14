@@ -30,9 +30,9 @@ defmodule IRC.Commands.UserTest do
       response =
         [
           {:RPL_WELCOME, @nick, @login, "127.0.0.1"},
-          :RPL_YOURHOST,
-          :RPL_CREATED,
-          :RPL_MYINFO
+          {:RPL_YOURHOST, @nick},
+          {:RPL_CREATED, @nick},
+          {:RPL_MYINFO, @nick}
         ]
 
       assert user |> subject(@login, @mode, @real_name) == {:ok, response}

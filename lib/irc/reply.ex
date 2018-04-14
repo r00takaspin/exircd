@@ -3,7 +3,6 @@ defmodule IRC.Reply do
     Отвечает за формирование ответа от сервера
   """
 
-  @servername Application.get_env(:exircd, :servername)
   @serverhost Application.get_env(:exircd, :serverhost)
   @version Application.get_env(:exircd, :version)
   @start_date Application.get_env(:exircd, :server_created)
@@ -23,6 +22,13 @@ defmodule IRC.Reply do
       RPL_UNAWAY:           "305",
       RPL_NOWAWAY:          "306",
 
+      #WHOIS
+      RPL_WHOISUSER:        "311",
+      RPL_WHOISSERVER:      "312",
+      RPL_WHOISOPERATOR:    "313",
+      RPL_WHOISIDLE:        "317",
+      RPL_ENDOFWHOIS:       "318",
+      RPL_WHOISCHANNELS:    "319",
       # PRIVMSG
       ERR_NOSUCHNICK:       "401",
       ERR_NOSUCHSERVER:     "402",
@@ -41,8 +47,6 @@ defmodule IRC.Reply do
     }
   end
 
-  defstruct [:code, :msg]
-
   @doc """
     Вывод ошибок
   """
@@ -60,7 +64,7 @@ defmodule IRC.Reply do
     format :ERR_ERRONEUSNICKNAME, "<#{nick}> :Erroneous nickname"
   end
   def error({:ERR_NICKNAMEINUSE, nick}) do
-    format :ERR_NICKNAMEINUSE, "<#{nick}> :Nickname is already in use"
+    format :ERR_NICKNAMEINUSE, "* #{nick} :Nickname is already in use"
   end
   def error({:ERR_ALREADYREGISTRED}) do
     format :ERR_ALREADYREGISTRED, ":Unauthorized command (already registered)"
@@ -90,37 +94,40 @@ defmodule IRC.Reply do
   def reply(list) when is_list(list) do
     list |> List.foldl("",fn(r, str) -> str <> reply(r) end)
   end
-  def reply({:RPL_AWAY, nick, msg}) do
-    format :RPL_AWAY, "#{nick} :#{msg}"
+  def reply({:RPL_AWAY, to, nick, msg}) do
+    format :RPL_AWAY, to, "#{nick} :#{msg}"
   end
-  def reply(:RPL_UNAWAY) do
-    format :RPL_UNAWAY, ":You are no longer marked as being away"
+  def reply({:RPL_UNAWAY, to}) do
+    format :RPL_UNAWAY, to, ":You are no longer marked as being away"
   end
-  def reply(:RPL_NOWAWAY) do
-    format :RPL_NOWAWAY, ":You have been marked as being away"
+  def reply({:RPL_NOWAWAY, to}) do
+    format :RPL_NOWAWAY, to, ":You have been marked as being away"
   end
   def reply({:PRIVMSG, from, to, msg}) do
     format ":#{from} PRIVMSG #{to} :#{msg}"
   end
   def reply({:RPL_WELCOME, nick, login, host}) do
-    format :RPL_WELCOME, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}"
+    format :RPL_WELCOME, nick, "Welcome to the Internet Relay Network #{nick}!#{login}@#{host}"
   end
-  def reply(:RPL_YOURHOST) do
-    format :RPL_YOURHOST, "Your host is #{@servername}, running version #{@version}"
+  def reply({:RPL_YOURHOST, to}) do
+    format :RPL_YOURHOST, to, "Your host is #{@serverhost}, running version #{@version}"
   end
-  def reply(:RPL_CREATED) do
-    format :RPL_CREATED, "This server was created #{@start_date}"
+  def reply({:RPL_CREATED, to}) do
+    format :RPL_CREATED, to, "This server was created #{@start_date}"
   end
-  def reply(:RPL_MYINFO) do
-    format :RPL_MYINFO, "#{@servername} #{@version} #{@user_modes} #{@chanel_modes}"
+  def reply({:RPL_MYINFO, to}) do
+    format :RPL_MYINFO, to, "#{@serverhost} #{@version} #{@user_modes} #{@chanel_modes}"
   end
-  def reply(_params), do: reply()
 
   defp reply_id(code), do: response_codes()[code]
 
   defp format(str), do: "#{str}\r\n"
 
   defp format(code, str) do
-    "#{reply_id(code)} #{str}\r\n"
+    ":#{@serverhost} #{reply_id(code)} #{str}\r\n"
+  end
+
+  defp format(code, to, str) do
+    ":#{@serverhost} #{reply_id(code)} #{to} #{str}\r\n"
   end
 end
