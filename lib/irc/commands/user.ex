@@ -5,7 +5,7 @@ defmodule IRC.Commands.User do
     Регистрирует пользователя по юзернейму и имени и фамилии
   """
 
-  def run(user, login, mode, realname) do
+  def run(%User{pid: user}, login, mode, realname) do
     user
     |> User.user(login, mode, realname)
     |> case do

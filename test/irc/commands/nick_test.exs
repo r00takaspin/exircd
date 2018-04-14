@@ -14,7 +14,7 @@ defmodule IRC.Commands.NickTest do
 
   describe "run/3" do
     def subject(user, nick) do
-      Nick.run(user, nick)
+      Nick.run(IRC.User.info(user), nick)
     end
 
     setup do

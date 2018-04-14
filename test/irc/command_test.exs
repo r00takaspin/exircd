@@ -2,7 +2,7 @@ defmodule IRC.CommandTest do
   use ExUnit.Case
   doctest IRC.Command
 
-  alias IRC.{Command, Support.Factory}
+  alias IRC.{Command, User, Support.Factory}
 
   setup_all do
     {:ok, _} = Registry.start_link(keys: :unique, name: UserRegistry)
@@ -15,7 +15,7 @@ defmodule IRC.CommandTest do
 
   describe "run/1" do
     def subject(user, params) do
-      Command.run(user, params)
+      Command.run(User.info(user), params)
     end
 
     setup do

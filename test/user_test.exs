@@ -65,12 +65,6 @@ defmodule UserTest do
     end
   end
 
-  describe "registered?/1" do
-    test "new user is not registered", %{user: user} do
-      assert User.registered?(user) == false
-    end
-  end
-
   describe "away/2" do
     test "set away message", %{user: user} do
       User.away(user, "Away")

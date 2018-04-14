@@ -3,13 +3,13 @@ defmodule IRC.Commands.Nick do
     Исполнение команды nick
   """
 
-  alias IRC.UserRegistry
+  alias IRC.{User, UserRegistry}
 
   @doc """
     Смена ника пользователя или регистрация пользователя
     с указанным никнеймом
   """
-  def run(user, nick) do
+  def run(%User{pid: user}, nick) do
     user
     |> UserRegistry.nick(nick)
     |> format_output

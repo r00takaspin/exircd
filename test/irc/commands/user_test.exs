@@ -35,11 +35,11 @@ defmodule IRC.Commands.UserTest do
           {:RPL_MYINFO, @nick}
         ]
 
-      assert user |> subject(@login, @mode, @real_name) == {:ok, response}
+      assert IRC.User.info(user) |> subject(@login, @mode, @real_name) == {:ok, response}
     end
 
     test "save user details", %{user: user} do
-      assert user |> subject(@login, @mode, @real_name) == :ok
+      assert IRC.User.info(user) |> subject(@login, @mode, @real_name) == :ok
     end
   end
 end

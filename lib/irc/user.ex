@@ -80,31 +80,6 @@ defmodule IRC.User do
   end
 
   @doc """
-  Проверка регистрации пользователя
-  """
-  @spec registered?(user :: pid()) :: boolean
-  def registered?(user) do
-    User.info(user).registered?
-  end
-
-  @doc """
-  Находится ли пользователь в статусе away
-  """
-  @spec away?(user :: pid()) :: boolean
-  def away?(user) do
-    !is_nil(User.get_param(user, :away_msg))
-  end
-
-  @doc """
-  Возвращает никнейм пользователя
-  """
-  @spec nick(user :: pid()) :: {:ok, String.t()}
-  def nick(user) do
-    get_param(user, :nick)
-  end
-
-
-  @doc """
   Удаляет статус Away
   """
   @spec away(user :: pid()) :: :ok

@@ -1,7 +1,7 @@
 defmodule IRC.Commands.Whois do
-  alias IRC.UserRegistry
+  alias IRC.{User, UserRegistry}
 
-  def run(user, target) do
+  def run(%User{pid: user}, target) do
     case UserRegistry.get(target) do
       {:error, error} -> {:error, error}
       target_pid -> :ok

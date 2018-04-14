@@ -92,10 +92,10 @@ defmodule UserRegistryTest do
       {:ok, _} = IRC.UserRegistry.nick(user, @new_nick)
 
       {:ok, loopa} = IRC.UserRegistry.lookup(@new_nick)
-      assert @new_nick == loopa |> IRC.User.nick
+      assert @new_nick == IRC.User.info(loopa).nick
 
       {:ok, poopa} = IRC.UserRegistry.nick(user, @old_nick)
-      assert User.nick(poopa) == @old_nick
+      assert User.info(poopa).nick == @old_nick
     end
   end
 

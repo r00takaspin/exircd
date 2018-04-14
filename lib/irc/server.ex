@@ -39,11 +39,9 @@ defmodule IRC.Server do
   end
 
   defp serve(socket) do
-    {:ok, user} = UserRegistry.find_or_create_by_socket(socket)
-
-    with line <- read_line(socket),
-         {:ok, command} <- parse_line(user, line),
-         {:ok, reply} <- Command.run(user, command) do
+    with {line, %User{registered?: registred} = user_context} <- read_line(socket),
+         {:ok, command} <- parse_line(line, registred),
+         {:ok, reply} <- Command.run(user_context, command) do
             reply
             |> Reply.reply()
             |> write_line(socket)
@@ -55,14 +53,12 @@ defmodule IRC.Server do
     serve(socket)
   end
 
-  defp parse_line(user, line) do
-    cond do
-      User.registered?(user) || String.starts_with?(line, ["USER", "NICK"]) ->
-        line
-        |> Command.parse_line
-        |> Command.parse
-      true -> {:error, {:ERR_NOTREGISTERED}}
-    end
+  defp parse_line("USER" <> _  = line, false), do: parse_line(line)
+  defp parse_line("NICK" <> _= line, false), do: parse_line(line)
+  defp parse_line(_line, false), do: {:error, {:ERR_NOTREGISTERED}}
+  defp parse_line(line, true), do: parse_line(line)
+  defp parse_line(line) do
+    line |> Command.parse_line |> Command.parse
   end
 
   defp read_line(socket) do
@@ -70,7 +66,9 @@ defmodule IRC.Server do
     |> case do
       {:ok, data} ->
         debug(socket, "Request: #{data}")
-        String.trim(data)
+        {:ok, user} = UserRegistry.find_or_create_by_socket(socket)
+        context = User.info(user)
+        {String.trim(data), context}
 
       {:error, :closed} ->
         case UserRegistry.lookup(socket) do

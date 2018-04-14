@@ -1,5 +1,5 @@
 defmodule IRC.Commands.Away do
-  alias IRC.User
+  alias IRC.{User, UserRegistry}
 
   @moduledoc """
   Исполнение команды away
@@ -10,9 +10,8 @@ defmodule IRC.Commands.Away do
   """
   @type unaway :: {:ok, :RPL_UNAWAY}
   @spec run(user :: pid()) :: unaway
-  def run(user) do
+  def run(%User{pid: user, nick: nick}) do
     user |> User.away
-    nick = User.nick(user)
 
     {:ok, {:RPL_UNAWAY, nick}}
   end
@@ -22,9 +21,8 @@ defmodule IRC.Commands.Away do
   """
   @type away :: {:ok, :RPL_NOWAWAY}
   @spec run(user :: pid(), msg :: String.t) :: away
-  def run(user, msg) do
+  def run(%User{pid: user, nick: nick}, msg) do
     user |> User.away(msg)
-    nick = User.nick(user)
 
     {:ok, {:RPL_NOWAWAY, nick}}
   end

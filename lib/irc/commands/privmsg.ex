@@ -1,7 +1,5 @@
 defmodule IRC.Commands.Privmsg do
-  alias IRC.{User, UserRegistry, Utils.Nickname}
-
-  @server_name Application.get_env(:exircd, :servername)
+  alias IRC.{User, UserRegistry}
 
   @type target :: String.t()
   @type msg :: String.t()
@@ -11,19 +9,21 @@ defmodule IRC.Commands.Privmsg do
   @type response :: no_nick | no_server | away | :ok
 
   @spec run(author_pid :: pid(), target, String.t()) :: response
-  def run(author_pid, target, msg) do
+  def run(%User{pid: author_pid} = source, target, msg) do
     case UserRegistry.get(target) do
       {:error, msg} -> {:error, msg}
       target_pid ->
         User.privmsg(author_pid, target_pid, msg)
         # TODO: метод User.info(user) должен содержать всю информацию о пользвателе
         # и вызываться при выполнении команды
-        if User.away?(target_pid) do
-          nick = User.nick(author_pid)
-          {:ok, {:RPL_AWAY, nick, target, User.get_param(target_pid, :away_msg)}}
-        else
-          :ok
-        end
+        source |> check_away(User.info(target_pid))
     end
+  end
+
+  defp check_away(_source, %User{away_msg: nil}) do
+    :ok
+  end
+  defp check_away(%User{nick: nick}, %User{away_msg: away_msg, nick: target_nick}) do
+    {:ok, {:RPL_AWAY, nick, target_nick, away_msg}}
   end
 end
