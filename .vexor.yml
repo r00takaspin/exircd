@@ -1,0 +1,8 @@
+language: go
+go: 1.10
+
+install: sudo docker build --rm -t elixir-test -f Dockerfile.test .  
+database: echo Skip
+script:
+  - "sudo docker run --rm -ti -v $(pwd):/app elixir-test:latest mix test"
+
