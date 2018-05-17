@@ -1,0 +1,7 @@
+FROM bitwalker/alpine-elixir:1.6.4
+
+COPY . .
+
+RUN export MIX_ENV=test && \
+    rm -Rf _build && \
+    mix deps.get
